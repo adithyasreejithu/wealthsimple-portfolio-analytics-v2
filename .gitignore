@@ -11,6 +11,7 @@ Data_Files/*
 
 ref/*
 !ref/*.pdf
+!ref/ref/data_pipeline_reference.pdf
 
 
 .env
