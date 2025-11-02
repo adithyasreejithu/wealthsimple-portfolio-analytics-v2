@@ -3,24 +3,23 @@ from pathlib import Path
 
 import fitz
 import pytesseract
+import pandas as pd
 from PIL import Image
 
 from dotenv import load_dotenv
 from collections import defaultdict
-
+from Config import *
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+  
 load_dotenv()
 DATA_FILES = os.getenv("DATA_FILES")
-DPI = 300
-PSM_MODE = "--psm 6"
-CPU_WORKERS = os.cpu_count() -1
-PDF_HEADINGS = ["Portfolio Cash", "Portfolio Equities", "Activity - Current period","Transactions for Future Settlement"]
+
 
 # Completed
 def testingcase():
     ws = os.environ.get("DATA_FILES")
-    testing_file = Path(ws) / "March_2025.pdf"
+    testing_file = Path(ws) / "April_2025.pdf"
     return testing_file
 
 # Completed
@@ -38,6 +37,32 @@ def ocr_extract(page_num, file_path):
         img = Image.open(io.BytesIO(pix.tobytes("png")))
         text = pytesseract.image_to_string(img,config=PSM_MODE)
         return page_num, text
+    
+def parse_transactions(text: str):
+    pattern = get_pattern()
+    matches = [m.groupdict() for m in pattern.finditer(text)]
+
+    if not matches:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(matches)
+  
+    return df
+
+def merge_df_lines(text: str) -> str : 
+    merged_lines = []
+
+    for line in text.splitlines():
+        line = line.strip()
+        if not line: 
+            continue
+        if line not in TRANSACTION_TYPES:
+            merged_lines.append(line)
+        else:
+            if merged_lines:
+                merged_lines.append(line)
+
+
 
 # In progress
 def extraction_pipline(file):
@@ -60,6 +85,7 @@ def extraction_pipline(file):
     pattern = r"({})".format("|".join(map(re.escape, PDF_HEADINGS)))
     matches = list(re.finditer(pattern,page_contents))
 
+    # Grouping content
     for i, match in enumerate(matches):
         current = match.group()
         key = f"{current}_{i+1}"
@@ -68,29 +94,47 @@ def extraction_pipline(file):
         content = page_contents[start:end]
         mydict[key] = content
 
-    activity_section = [
-        key for key in mydict.keys()
-        if key.startswith("Activity - Current period")
-    ]
+    # Merging duplicate sections across different pages
+    combined_activity = "\n".join(
+        mydict[k] for k in mydict if k.startswith("Activity - Current period")
+    )
 
-    for item in activity_section: 
-        value = mydict[item]
-        lines = value.splitlines()
-        lines = lines[2:-4]
+    # Data Transformation
+    all_dfs = []
 
-        for line in lines:
-            print(line)
-        print("-------------------------------------------\n")
+    lines = combined_activity.splitlines()
+    for i, line in enumerate(lines):
+        full_line = line
+
+        match line:
+
+            case _ if "BUY" in line:
+                if i + 1 < len(lines):  # avoid out-of-range error
+                    next_line = lines[i + 1].strip()
+                    if not any(word in next_line for word in TRANSACTION_TYPES):
+                        full_line += " " + next_line
+                
+                df = parse_transactions(full_line)
+                if not df.empty:
+                    all_dfs.append(df)
+                    
+            
+            case _ if "DIV" in line: 
+                if i + 1 < len(lines):  # avoid out-of-range error
+                    next_line = lines[i + 1].strip()
+                    if not any(word in next_line for word in TRANSACTION_TYPES):
+                        full_line += " " + next_line
+                
+                df = parse_transactions(full_line)
+                if not df.empty:
+                    all_dfs.append(df)
 
 
+    if all_dfs:
+        transaction_df = pd.concat(all_dfs, ignore_index=True)
+        print(transaction_df)
+    
 
-
-
-    # combined_activity = "\n".join(
-    #     mydict[k] for k in mydict if k.startswith("Activity - Current period")
-    # )
-
-    # print(combined_activity)
 
 if __name__ == "__main__":
     # file_list = check_data_files() # Default case
@@ -98,5 +142,7 @@ if __name__ == "__main__":
 
     # for file in file_list:
     #     print(file)
+
+
 
     extraction_pipline(test_file)
