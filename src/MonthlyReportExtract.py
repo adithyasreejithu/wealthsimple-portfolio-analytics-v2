@@ -19,7 +19,7 @@ DATA_FILES = os.getenv("DATA_FILES")
 # Completed
 def testingcase():
     ws = os.environ.get("DATA_FILES")
-    testing_file = Path(ws) / "April_2025.pdf"
+    testing_file = Path(ws) / "March_2025.pdf"
     return testing_file
 
 # Completed
@@ -43,6 +43,7 @@ def parse_transactions(text: str):
     matches = [m.groupdict() for m in pattern.finditer(text)]
 
     if not matches:
+        print(text)
         return pd.DataFrame()
 
     df = pd.DataFrame(matches)
@@ -99,35 +100,52 @@ def extraction_pipline(file):
         mydict[k] for k in mydict if k.startswith("Activity - Current period")
     )
 
+    # print(combined_activity)
+
     # Data Transformation
     all_dfs = []
 
     lines = combined_activity.splitlines()
     for i, line in enumerate(lines):
         full_line = line
+        # print(line)
 
         match line:
 
-            case _ if "BUY" in line:
+            case _ if  any(word in line for word in ["BUY","DIV" ]):
                 if i + 1 < len(lines):  # avoid out-of-range error
                     next_line = lines[i + 1].strip()
+                    # print("!!!!!!" + next_line)
                     if not any(word in next_line for word in TRANSACTION_TYPES):
                         full_line += " " + next_line
                 
                 df = parse_transactions(full_line)
                 if not df.empty:
-                    all_dfs.append(df)
-                    
+                    all_dfs.append(df)             
             
-            case _ if "DIV" in line: 
-                if i + 1 < len(lines):  # avoid out-of-range error
-                    next_line = lines[i + 1].strip()
-                    if not any(word in next_line for word in TRANSACTION_TYPES):
-                        full_line += " " + next_line
-                
+            case _ if "CONT" in line: 
                 df = parse_transactions(full_line)
-                if not df.empty:
-                    all_dfs.append(df)
+                all_dfs.append(df)
+
+            case _ if "SELL" in line: 
+                df = parse_transactions(full_line)
+                all_dfs.append(df)
+            
+            case _ if "LOAN" in line: 
+                df = parse_transactions(full_line)
+                all_dfs.append(df)
+
+            case _ if "NRT" in line: 
+                df = parse_transactions(full_line)
+                all_dfs.append(df)
+            
+            case _ if "RECALL" in line: 
+                df = parse_transactions(full_line)
+                all_dfs.append(df)
+
+            case _ if "FPLINT" in line: 
+                df = parse_transactions(full_line)
+                all_dfs.append(df)
 
 
     if all_dfs:
@@ -142,7 +160,6 @@ if __name__ == "__main__":
 
     # for file in file_list:
     #     print(file)
-
 
 
     extraction_pipline(test_file)

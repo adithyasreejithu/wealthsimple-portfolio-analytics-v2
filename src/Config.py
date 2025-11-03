@@ -16,22 +16,37 @@ def get_transaction_dict(default_value=None):
 
 def get_pattern():
     return re.compile(
-        r"""(?P<Date>\d{4}-\d{2}-\d{2})\s+                      # 2025-04-02
-            (?P<Type>[A-Z]+)\s+                                 # BUY, DIV, SELL, etc.
-            (?P<Symbol>[A-Z0-9]+)\s*[-:]\s*                     # SPLG -
-            (?P<Name>[^:]+?):                                   # Full stock name (until colon)
-            
-            # Look for quantity (before or after the $ values)
-            (?:.*?(?:Bought|Sold)\s*(?P<Quantity>\d+(?:\.\d+)?)\s*shares)?  
+        r"""(?P<Date>\d{4}-\d{2}-\d{2})\s+                        # e.g. 2025-03-14
+            (?P<Type>[A-Z]+)\s+                                   # BUY, CONT, DIV, FPLINT, etc.
 
-            # Capture three $ values (Debit, Credit, Balance)
-            (?:.*?\$?(?P<Debit>\d+\.\d{2})\s+\$?(?P<Credit>\d+\.\d{2})\s+\$?(?P<Balance>\d+\.\d{2}))?
+            # Optional Symbol + Name
+            (?:
+                (?P<Symbol>[A-Z0-9]+)\s*[-:]\s*(?P<Name>[^:]+?):  # e.g. RTX - RTX Corporation:
+            )?
 
-            # Capture execution date (can appear anywhere)
-            (?:.*?executed(?:\s*at)?(?:.*?(?P<ExecDate>\d{4}-\d{2}-\d{2})))?
+            # Optional Bought/Sold and Quantity
+            (?:[\s\S]*?(?:Bought|Sold)\s*(?P<Quantity>\d+(?:\.\d+)?)\s*shares)?  
 
-            # Optional FX rate
-            (?:.*?FX\s*Rate[:\s]*?(?P<FXRate>\d+\.\d+))?
+            # Optional execution date
+            (?:[\s\S]*?executed(?:\s*at)?(?:[\s\S]*?(?P<ExecDate>\d{4}-\d{2}-\d{2})))?  
+
+            # "FX" may appear before the dollar amounts
+            (?:[\s\S]*?FX)?                                       
+
+            # Debit, Credit, Balance block
+            (?:[\s\S]*?\$?(?P<Debit>\d+\.\d{2})\s+\$?(?P<Credit>\d+\.\d{2})\s+\$?(?P<Balance>\d+\.\d{2}))?
+
+            # Optional "Rate:" on the next line (after FX)
+            (?:[\s\S]*?Rate[:\s]*?(?P<FXRate>\d+\.\d+))?
         """,
         re.VERBOSE | re.DOTALL
     )
+
+
+
+
+
+
+
+
+

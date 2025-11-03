@@ -6,8 +6,9 @@ env/
 __pycache__/
 *.pyc 
 
-Data_Files/*
-!Data_Files/.gitkeep
+Data/WealthSimple.db
+Data/Data_Files/*
+!Data/Data_Files/.gitkeep
 
 ref/*
 !ref/*.pdf
