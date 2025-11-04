@@ -150,16 +150,12 @@ def extraction_pipline(file):
 
     if all_dfs:
         transaction_df = pd.concat(all_dfs, ignore_index=True)
-        print(transaction_df)
+
+    return transaction_df
     
 
 
+# testing case
 if __name__ == "__main__":
-    # file_list = check_data_files() # Default case
     test_file = testingcase() # Testing Case
-
-    # for file in file_list:
-    #     print(file)
-
-
     extraction_pipline(test_file)
