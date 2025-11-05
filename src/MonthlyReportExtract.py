@@ -43,7 +43,7 @@ def parse_transactions(text: str):
     matches = [m.groupdict() for m in pattern.finditer(text)]
 
     if not matches:
-        print(text)
+        # print(text)
         return pd.DataFrame()
 
     df = pd.DataFrame(matches)

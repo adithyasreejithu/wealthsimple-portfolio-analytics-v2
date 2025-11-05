@@ -4,7 +4,7 @@ from MonthlyReportExtract import check_data_files, extraction_pipline
 
 def main():
     # Connecting to databases 
-    initialize_database    
+    initialize_database()    
 
     # Run extraction Pipeline 
     file_list =  check_data_files()
