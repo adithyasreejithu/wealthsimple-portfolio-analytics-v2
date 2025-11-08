@@ -7,6 +7,7 @@ def initialize_database(db_path="Data/WealthSimple.db"):
 
     con.execute("CREATE SEQUENCE IF NOT EXISTS seq_tickers_id START 1;")
 
+     # Tickers Table
     con.execute('''
         CREATE TABLE IF NOT EXISTS tickers (
             ticker_id BIGINT PRIMARY KEY DEFAULT nextval('seq_tickers_id'),
@@ -14,11 +15,10 @@ def initialize_database(db_path="Data/WealthSimple.db"):
         );
     ''')
 
-    # Stocks Table 
+    # Stocks Table  
     con.execute('''
         CREATE TABLE IF NOT EXISTS stocks (
-            ticker BIGINT PRIMARY KEY,
-            ticker_id BIGINT NOT NULL,
+            ticker_id BIGINT PRIMARY KEY,
             company_name TEXT,
             exchange TEXT,
             currency TEXT,
@@ -30,19 +30,30 @@ def initialize_database(db_path="Data/WealthSimple.db"):
     
     con.execute("CREATE SEQUENCE IF NOT EXISTS seq_trans_id START 1;")
 
-    # Stocks Table 
     con.execute('''
-            CREATE TABLE IF NOT EXISTS transactions (
+        CREATE TABLE IF NOT EXISTS transactions (
             id BIGINT PRIMARY KEY DEFAULT nextval('seq_trans_id'),
             date TEXT NOT NULL,
             transaction TEXT NOT NULL,
-            ticker_id BIGINT NOT NLL,
-            quantity REAL,
-            execDate = TEXT
-            debit REAL NOT NULL,
-            credit REAL NOT NULL,
-            fxRate REAL, 
-            FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id) ON DELETE CASCADE
+            ticker_id BIGINT NOT NULL,
+            quantity DECIMAL(18,6),
+            execDate TEXT,
+            debit DECIMAL(18,4),
+            credit DECIMAL(18,4),
+            fxRate DECIMAL(10,4),
+            FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id),
+            UNIQUE (date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate)
         );
     ''')
     return con
+
+def reset_database(db_path="Data/WealthSimple.db"):
+    con = dd.connect(db_path)
+    # Drop in dependency order
+    con.execute("DROP TABLE IF EXISTS transactions;")
+    con.execute("DROP TABLE IF EXISTS stocks;")
+    con.execute("DROP TABLE IF EXISTS tickers;")
+    con.execute("DROP SEQUENCE IF EXISTS seq_tickers_id;")
+    con.execute("DROP SEQUENCE IF EXISTS seq_trans_id;")
+    print("✅ All tables and sequences dropped.")
+

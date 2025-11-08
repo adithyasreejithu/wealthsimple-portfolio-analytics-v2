@@ -11,7 +11,7 @@ def get_db_connnection():
 def get_ticker_table(con):
     return con.execute(
         '''
-            SELECT ticker_symbol 
+            SELECT ticker_id, ticker_symbol 
             FROM tickers;
         '''
     ).fetchdf()
