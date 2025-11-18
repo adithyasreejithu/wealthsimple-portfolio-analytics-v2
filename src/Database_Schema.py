@@ -19,11 +19,30 @@ def initialize_database(db_path="Data/WealthSimple.db"):
     con.execute('''
         CREATE TABLE IF NOT EXISTS stocks (
             ticker_id BIGINT PRIMARY KEY,
+            asset TEXT,
             company_name TEXT,
             exchange TEXT,
             currency TEXT,
             sector TEXT,
             industry TEXT,
+            FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id)
+        );
+    ''')
+
+    # ETF Table
+    con.execute('''
+        CREATE TABLE IF NOT EXISTS etf (
+            ticker_id BIGINT PRIMARY KEY,
+            asset TEXT,
+            company_name TEXT,
+            currency TEXT,
+            fund_family TEXT,
+            yield TEXT,
+            expense_ratio TEXT,
+            aum TEXT,
+            nav TEXT,
+            top_holdings TEXT,
+            sector_weights TEXT,
             FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id)
         );
     ''')
@@ -52,8 +71,11 @@ def reset_database(db_path="Data/WealthSimple.db"):
     # Drop in dependency order
     con.execute("DROP TABLE IF EXISTS transactions;")
     con.execute("DROP TABLE IF EXISTS stocks;")
+    con.execute("DROP TABLE IF EXISTS etf;")
     con.execute("DROP TABLE IF EXISTS tickers;")
     con.execute("DROP SEQUENCE IF EXISTS seq_tickers_id;")
     con.execute("DROP SEQUENCE IF EXISTS seq_trans_id;")
-    print("✅ All tables and sequences dropped.")
+    print("All tables and sequences dropped.")
 
+
+# reset_database()
