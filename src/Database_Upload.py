@@ -6,6 +6,13 @@ from concurrent.futures import ThreadPoolExecutor
 from yfinance_gather_security_info import*
 
 def upload_yfinance_info(etfs, stocks):
+   """
+   Uploads etf and stock DataFrame 
+   
+   Arguments 
+   etfs -- df holding etf information
+   stocks -- DataFrame holding etf information
+   """
    db = get_db_connnection()
    db_tickers = get_ticker_table(db) 
 
@@ -19,12 +26,11 @@ def upload_yfinance_info(etfs, stocks):
         
    etfs_df = pd.DataFrame(etfs_rows)
 
-   print(etfs_df)
 
    if not etfs_df.empty:
       etfs_df['ticker_id'] = etfs_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
       etfs_df.drop("ticker",axis=1,inplace=True)
-   #   print(etfs_df)
+
 
    for ticker, data in stocks.items():
       row = {"ticker": ticker}
@@ -32,7 +38,6 @@ def upload_yfinance_info(etfs, stocks):
       stocks_rows.append(row)
         
    stocks_df = pd.DataFrame(stocks_rows)
-   print(stocks_rows)
    
    if not stocks_df.empty:
       stocks_df['ticker_id'] = stocks_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
@@ -47,7 +52,7 @@ def upload_yfinance_info(etfs, stocks):
             FROM stocks_df;
         """)
 
-    # ---- Upload ETF data IF EXISTS ----
+   
    if not etfs_df.empty:
       db.register("etfs_df", etfs_df)
       db.execute("""

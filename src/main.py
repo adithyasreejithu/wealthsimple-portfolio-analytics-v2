@@ -7,12 +7,16 @@ def main():
 
     # Connecting to databases 
     initialize_database() 
+    
     # Run extraction Pipeline 
     file_list =  check_data_files()
     for file in file_list:
         print(file)
         trans_df = extraction_pipline(file)
         upload_transactions(trans_df)
+
+    # Update Historial data 
+    
                 
 
 if __name__ == "__main__":

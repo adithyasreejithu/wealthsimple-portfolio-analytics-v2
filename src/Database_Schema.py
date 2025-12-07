@@ -49,10 +49,11 @@ def initialize_database(db_path="Data/WealthSimple.db"):
     
     con.execute("CREATE SEQUENCE IF NOT EXISTS seq_trans_id START 1;")
 
+    # Transaction Table 
     con.execute('''
         CREATE TABLE IF NOT EXISTS transactions (
             id BIGINT PRIMARY KEY DEFAULT nextval('seq_trans_id'),
-            date TEXT NOT NULL,
+            date DATE NOT NULL,
             transaction TEXT NOT NULL,
             ticker_id BIGINT NOT NULL,
             quantity DECIMAL(18,6),
@@ -63,6 +64,19 @@ def initialize_database(db_path="Data/WealthSimple.db"):
             FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id),
             UNIQUE (date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate)
         );
+    ''')
+
+    con.execute('''
+        CREATE TABLE IF NOT EXISTS HistoricalRecords (
+            ticker_id BIGINT NOT NULL,
+            date DATE NOT NULL, 
+            adj_close DOUBLE NOT NULL, 
+            open DOUBLE NOT NULL,
+            high DOUBLE NOT NULL,
+            low DOUBLE NOT NULL,
+            close DOUBLE NOT NULL,
+            volume BIGINT NOT NULL 
+            )
     ''')
     return con
 
