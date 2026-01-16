@@ -3,7 +3,7 @@ import yfinance as yf
 from Database_Commands import* 
 from curl_cffi import requests
 from concurrent.futures import ThreadPoolExecutor
-from yfinance_gather_security_info import*
+from yfinance_gather_security_info import get_security_info
 
 def upload_yfinance_info(etfs, stocks):
    """
@@ -14,7 +14,7 @@ def upload_yfinance_info(etfs, stocks):
    stocks -- DataFrame holding etf information
    """
    db = get_db_connnection()
-   db_tickers = get_ticker_table(db) 
+   db_tickers = get_ticker_table() 
 
    etfs_rows = []
    stocks_rows = []
@@ -65,17 +65,15 @@ def upload_yfinance_info(etfs, stocks):
       """)
 
 
-
-
 def upload_transactions(df):
    # Setting up database connectiond
    db = get_db_connnection()
    df = df[df['Symbol'].notnull()].copy()
-   db_tickers = get_ticker_table(db) # this returns a df 
+   db_tickers = get_ticker_table() # this returns a df 
 
    # creating a list of of tickers not in the database 
    missing = df.loc[~df['Symbol'].isin(db_tickers['ticker_symbol']), 'Symbol'].unique().tolist()
-   etfs, stocks  = get_securitie_info(missing)
+   etfs, stocks  = get_security_info(missing)
 
    # adding the missing tickers into the database 
    if missing:
@@ -90,7 +88,7 @@ def upload_transactions(df):
                  ''')
   
    # matching the tickers to their database id 
-   db_tickers = get_ticker_table(db)  # needs to get new values
+   db_tickers = get_ticker_table()  # needs to get new values
    df['ticker_id'] = df['Symbol'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
    df = df.rename(columns={
       'Date': 'date',
@@ -130,3 +128,52 @@ def upload_transactions(df):
         SELECT date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate
         FROM transactions_df;
    """)
+
+
+def upload_history(history_df: pd.DataFrame):
+   db = get_db_connnection()
+   tick_map = get_ticker_table()
+   print(tick_map)
+
+ 
+   history_df = history_df.rename(columns={
+      "Date": "date",
+      "Ticker": "ticker_symbol",
+      "Adj Close": "adj_close",
+      "High": "high",
+      "Low": "low",
+      "Close": "close",
+      "Open": "open",
+      "Volume": "volume"
+   })
+
+   
+   history_df["ticker_symbol_base"] = history_df["ticker_symbol"].str.replace(
+      r"\.TO$", "", regex=True
+   )
+
+   
+   history_df["ticker_id"] = history_df["ticker_symbol_base"].map(
+      tick_map.set_index("ticker_symbol")["ticker_id"]
+   )
+
+   
+   history_df = history_df[
+      history_df[["date","ticker_id","adj_close","high","low","close","open","volume"]]
+      .notna()
+      .all(axis=1)
+   ].copy()
+
+   db.register('history_df', history_df)
+   db.execute("""
+      INSERT OR IGNORE INTO HistoricalRecords (date, ticker_id, adj_close, high, low, close, open, volume)
+      SELECT date, ticker_id, adj_close, high, low, close, open, volume
+      FROM history_df;
+   """)
+
+   
+
+
+
+   #Rename and do droppping tests
+   

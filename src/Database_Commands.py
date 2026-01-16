@@ -1,4 +1,5 @@
 import os 
+import pandas as pd
 import duckdb as dd 
 from dotenv import load_dotenv
 
@@ -8,7 +9,8 @@ DB_PATH = os.getenv("DB_PATH")
 def get_db_connnection(): 
     return dd.connect(DB_PATH)
 
-def get_ticker_table(con):
+def get_ticker_table():
+    con = get_db_connnection()
     return con.execute(
         '''
             SELECT ticker_id, ticker_symbol 
@@ -16,18 +18,25 @@ def get_ticker_table(con):
         '''
     ).fetchdf()
 
-def get_last_date_stored(con): 
-    return con.execute(
+def get_last_date_stored():
+    con = get_db_connnection()
+    df = con.execute(
         '''
-        SELECT 
-            ticker_id,
-            MAX(date) as lastDate
-        FROM main.HistoricalRecords 
-        GROUP BY ticker_id;
+        SELECT MAX(date) AS lastDate
+        FROM main.HistoricalRecords;
         '''
     ).fetchdf()
 
-def get_all_tickers(con):
+    result = df["lastDate"].iloc[0]
+
+    if result is None or pd.isna(result):
+        return None
+
+    return result.date()
+
+
+def get_all_tickers():
+    con = get_db_connnection()
     return con.execute(
         '''
         SELECT 

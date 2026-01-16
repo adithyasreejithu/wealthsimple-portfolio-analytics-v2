@@ -11,7 +11,8 @@ def initialize_database(db_path="Data/WealthSimple.db"):
     con.execute('''
         CREATE TABLE IF NOT EXISTS tickers (
             ticker_id BIGINT PRIMARY KEY DEFAULT nextval('seq_tickers_id'),
-            ticker_symbol TEXT UNIQUE NOT NULL
+            ticker_symbol TEXT UNIQUE NOT NULL,
+            pull_date Date
         );
     ''')
 
@@ -75,8 +76,9 @@ def initialize_database(db_path="Data/WealthSimple.db"):
             high DOUBLE NOT NULL,
             low DOUBLE NOT NULL,
             close DOUBLE NOT NULL,
-            volume BIGINT NOT NULL 
-            )
+            volume BIGINT NOT NULL, 
+            UNIQUE (date, ticker_id)
+            );
     ''')
     return con
 
@@ -87,6 +89,7 @@ def reset_database(db_path="Data/WealthSimple.db"):
     con.execute("DROP TABLE IF EXISTS stocks;")
     con.execute("DROP TABLE IF EXISTS etf;")
     con.execute("DROP TABLE IF EXISTS tickers;")
+    con.execute("DROP TABLE IF EXISTS HistoricalRecords;")
     con.execute("DROP SEQUENCE IF EXISTS seq_tickers_id;")
     con.execute("DROP SEQUENCE IF EXISTS seq_trans_id;")
     print("All tables and sequences dropped.")
