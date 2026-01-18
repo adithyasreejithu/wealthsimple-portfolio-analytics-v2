@@ -1,7 +1,11 @@
 import os 
 import duckdb as dd
+from system_logger import get_logger
+
+logger = get_logger(__name__)
 
 def initialize_database(db_path="Data/WealthSimple.db"):    
+    logger.info("Initializing database schema")
     # Creating database file 
     con = dd.connect(db_path)
 
@@ -83,6 +87,7 @@ def initialize_database(db_path="Data/WealthSimple.db"):
     return con
 
 def reset_database(db_path="Data/WealthSimple.db"):
+    logger.info("Reset the database")
     con = dd.connect(db_path)
     # Drop in dependency order
     con.execute("DROP TABLE IF EXISTS transactions;")

@@ -3,7 +3,10 @@ import yfinance as yf
 from Database_Commands import* 
 from curl_cffi import requests
 from concurrent.futures import ThreadPoolExecutor
+from system_logger import get_logger
 from yfinance_gather_security_info import get_security_info
+
+logger = get_logger(__name__)
 
 def upload_yfinance_info(etfs, stocks):
    """

@@ -1,17 +1,17 @@
 import io, re, os
 from pathlib import Path
-
 import fitz
 import pytesseract
 import pandas as pd
 from PIL import Image
-
 from dotenv import load_dotenv
 from collections import defaultdict
 from Config import *
+from system_logger import get_logger
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-  
+logger = get_logger(__name__)
+
 load_dotenv()
 DATA_FILES = os.getenv("DATA_FILES")
 
@@ -67,6 +67,8 @@ def merge_df_lines(text: str) -> str :
 
 # In progress
 def extraction_pipline(file):
+    logger.info("started extraction process")
+    
     # CPU Setup 
     with fitz.open(file) as pdf: 
         page_count = pdf.page_count
