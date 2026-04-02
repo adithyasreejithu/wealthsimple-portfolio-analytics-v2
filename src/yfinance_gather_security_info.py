@@ -3,15 +3,15 @@ import pandas as pd
 import yfinance as yf 
 from datetime import date
 from dotenv import load_dotenv
-from Database_Commands import get_db_connnection, get_last_date_stored, get_all_tickers
+# from Database_Commands import get_db_connnection, get_last_date_stored, get_all_tickers
+from Database_Commands import  get_last_date_stored, get_all_tickers
 from curl_cffi import requests
 from concurrent.futures import ThreadPoolExecutor
+from system_logger import get_logger
 
+logger = get_logger(__name__)
 
-
-# Setting up database connection
-# db = get_db_connnection()
-# Getting first date from the database 
+# Loading Env variables 
 load_dotenv()
 START_DATE = os.getenv("START_DATE")
 
@@ -61,12 +61,14 @@ def get_info(ticker, session):
             "expense_ratio": info.get("annualReportExpenseRatio"),
             "aum": info.get("totalAssets"),
             "nav": info.get("navPrice"),
-            "top_holdings" : funds.top_holdings,
+            # "top_holdings" : funds.top_holdings,
+            "top_holdings" : getattr(funds, "top_holdings", None),
             "sector_weights": funds.sector_weightings
         }
 
     else:
         print(f"Unknown security type for {ticker}: {secType}")
+        logger.info("Unknown security type for %s: %s", ticker, secType)
 
     return etf_dict, stock_dict
 
@@ -88,22 +90,35 @@ def get_security_info(tickers:list):
     except Exception as e:
         print(f"Failed to fetch error: {e}")
 
-def get_security_history():
+def get_security_history(con):
+    """
+    Pulls Historical Data for securities 
+
+    Con: Database connection
+    """
 
     #temp list 
     dfs = []
 
     # retrieving yf dates 
     today = date.today()
-    tickers_df = get_all_tickers()
+    today_pull = today - pd.Timedelta(days=1)
+    tickers_df = get_all_tickers(con)
     tickers = tickers_df["final_ticker"].dropna().unique().tolist()
-    last_date = get_last_date_stored()
+    last_date = get_last_date_stored(con)
+
+    logger.info("Last date pulled: %s", last_date)
 
     # start date logic 
     if last_date is None or pd.isna(last_date):
+        logger.info("Last pulled data is empty - Using portfolio first date")
         start_date = os.getenv("START_DATE")
     else: 
-        start_date = last_date
+        if today_pull != last_date:
+            start_date = last_date
+        else : 
+            logger.info("Data was pulled today - no pull was made ")
+            return
 
     historical_data = yf.download(
         tickers=tickers,
@@ -125,54 +140,3 @@ def get_security_history():
     
     return combined_df
 
-
-# def get_security_history(tickers: list):
-
-#     dfs = []
-
-#     last_date = get_last_date_stored(db)
-#     today = date.today()
-
-#     if last_date is None or pd.isna(last_date):
-#         start_date = os.getenv("START_DATE")
-#     else:
-#         start_date = last_date
-
-#     historical_data = yf.download(
-#         tickers=tickers,
-#         start=start_date,
-#         end=today,
-#         threads=True,
-#         group_by="ticker",
-#         auto_adjust=False
-#     )
-
-#     for ticker in tickers:
-#         df = historical_data[ticker].copy()
-#         df.reset_index(inplace=True)
-#         df["Ticker"] = ticker
-#         df.columns.name = None
-#         dfs.append(df)
-
-#     combined_df = pd.concat(dfs, ignore_index=True)
-
-#     # combined_df = combined_df.rename(columns={
-        # "Date": "date",
-        # "Ticker": "ticker_id",
-        # "Adj Close": "adj_close",
-        # "High": "high",
-        # "Close": "close",
-        # "Open": "open",
-        # "Volume": "volume"
-#     # })
-
-#     # combined_df = combined_df.drop_duplicates(
-#     #     subset=["ticker_id", "date"],
-#     #     keep="last"
-#     # )
-
-#     return combined_df
-
-# if __name__ == "__main__":
-#     stonks = ['PZA.TO','L','RTX','ENB','SCHD']
-#     df = get_security_history(stonks)
