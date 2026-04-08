@@ -4,6 +4,7 @@ from MonthlyReportExtract import check_data_files, extraction_pipline, move_read
 from yfinance_gather_security_info import get_security_history
 from system_logger import get_logger
 from Purchase_Validation import email_handler
+from FormatFiles import rename_file
 
 logger = get_logger(__name__)
 
@@ -12,6 +13,9 @@ def ocr_method(con) -> None:
     Runs the OCR extraction pipeline for any new monthly report files.
     
     """
+    # renames files to help maintain order
+    rename_file()
+
     # File check 
     file_list = check_data_files()
 
@@ -43,7 +47,7 @@ def email_method(con) -> None:
 
 
 def main() -> None:
-    logger.info("Process started")
+    logger.info("Data pipeline initatied")
 
     initialize_database()
 
@@ -55,7 +59,7 @@ def main() -> None:
             if hist_data is not None: 
                 upload_history(hist_data, con)
                 
-            email_method(con)
+            # email_method(con)
 
     finally:
         close_connection()

@@ -18,7 +18,11 @@ _connection: dd.DuckDBPyConnection | None = None
 def get_shared_connection(db_path: str = DB_PATH) -> dd.DuckDBPyConnection:
     """
     Returns the single shared connection, creating it if needed.
-    DuckDB only allows one writer — this ensures we never open two at once.
+    DuckDB only allows one writer this ensures we never open two at once.
+
+    returns 
+    _connection: DuckDBPyConnection
+
     """
     global _connection
     if _connection is None:
@@ -42,18 +46,27 @@ def get_connection(db_path: str = DB_PATH) -> Generator[dd.DuckDBPyConnection, N
     """
     Context manager for scoped database work.
     Reuses the shared connection rather than opening a new one.
+
+    returns:
+    con: DuckDBPyConnection
+    
     """
     con = get_shared_connection(db_path)
     try:
-        yield con
+        yield con # gives connection back to the function caller 
     except Exception:
         logger.exception("Error during database operation")
         raise
 
 
 def _deploy_schema(con: dd.DuckDBPyConnection) -> None:
-    """Creates all tables and sequences. Expects an open connection."""
-    con.execute("BEGIN")
+    """
+    Creates all tables and sequences. 
+    Expects an open connection.
+    
+    """
+    # starts the transaction
+    con.execute("BEGIN") # starting process to either commmit or roll back values 
     try:
         con.execute("CREATE SEQUENCE IF NOT EXISTS seq_tickers_id START 1;")
 
@@ -157,17 +170,25 @@ def _deploy_schema(con: dd.DuckDBPyConnection) -> None:
             );
         ''')
 
+        # if transaction upload is successful commit the changes to the db
         con.execute("COMMIT")
         logger.info("Schema creation committed successfully")
 
     except Exception:
+        # an error occured therefore rollback
         con.execute("ROLLBACK")
         logger.exception("Schema creation failed, rolling back")
         raise
 
 
 def initialize_database(db_path: str = DB_PATH) -> None:
-    """Initializes all tables if they do not exist."""
+    """
+    Initializes all tables if they do not exist.
+
+    returns: 
+    No values
+    
+    """
     logger.info("Initializing database schema at %s", db_path)
     with get_connection(db_path) as con:
         _deploy_schema(con)
