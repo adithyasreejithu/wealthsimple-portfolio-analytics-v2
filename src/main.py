@@ -3,6 +3,7 @@ from Database_Upload import upload_transactions, upload_history
 from MonthlyReportExtract import check_data_files, extraction_pipline, move_read_file
 from yfinance_gather_security_info import get_security_history
 from system_logger import get_logger
+from Purchase_Validation import email_handler
 
 logger = get_logger(__name__)
 
@@ -38,7 +39,7 @@ def ocr_method(con) -> None:
 
 def email_method(con) -> None:
     """Placeholder for email-based transaction ingestion."""
-    pass
+    email_handler(con)
 
 
 def main() -> None:
@@ -52,7 +53,7 @@ def main() -> None:
 
             hist_data = get_security_history(con)
             if hist_data is not None: 
-                (hist_data, con)
+                upload_history(hist_data, con)
                 
             email_method(con)
 

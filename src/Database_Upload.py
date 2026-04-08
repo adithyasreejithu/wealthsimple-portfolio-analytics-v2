@@ -1,3 +1,4 @@
+import json
 import pandas as pd 
 import yfinance as yf 
 from Database_Commands import* 
@@ -8,7 +9,7 @@ from yfinance_gather_security_info import get_security_info
 
 logger = get_logger(__name__)
 
-def upload_yfinance_info(etfs, stocks):
+def upload_yfinance_info(etfs, stocks, db):
    """
    Uploads etf and stock DataFrame 
    
@@ -16,8 +17,8 @@ def upload_yfinance_info(etfs, stocks):
    etfs -- df holding etf information
    stocks -- DataFrame holding etf information
    """
-   db = get_db_connnection()
-   db_tickers = get_ticker_table() 
+   # db = get_db_connnection()
+   db_tickers = get_ticker_table(db) 
 
    etfs_rows = []
    stocks_rows = []
@@ -34,7 +35,14 @@ def upload_yfinance_info(etfs, stocks):
       etfs_df['ticker_id'] = etfs_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
       etfs_df.drop("ticker",axis=1,inplace=True)
 
-
+      # Convert to proper JSON before uploading
+      etfs_df['top_holdings'] = etfs_df['top_holdings'].apply(
+         lambda x: x.to_json(orient="records") if isinstance(x, pd.DataFrame) else json.dumps(x) if x is not None else None
+      )
+      etfs_df['sector_weights'] = etfs_df['sector_weights'].apply(
+         lambda x: x.to_json(orient="records") if isinstance(x, pd.DataFrame) else json.dumps(x) if x is not None else None
+      )
+   
    for ticker, data in stocks.items():
       row = {"ticker": ticker}
       row.update(data)
@@ -47,32 +55,51 @@ def upload_yfinance_info(etfs, stocks):
       stocks_df.drop("ticker",axis=1,inplace=True)
    
    if not stocks_df.empty:
-        db.register("stocks_df", stocks_df)
-        db.execute("""
+      try: 
+         db.register("stocks_df", stocks_df)
+         db.execute("""
             INSERT OR IGNORE INTO stocks 
                (ticker_id, asset, company_name, exchange, currency, sector, industry)
             SELECT ticker_id, asset, company_name, exchange, currency, sector, industry
             FROM stocks_df;
-        """)
-
+         """)
+      except Exception as e: 
+         logger.error(f"Error uploading stock_df {e}")
    
    if not etfs_df.empty:
-      db.register("etfs_df", etfs_df)
-      db.execute("""
-         INSERT OR IGNORE INTO etf 
-            (ticker_id, asset, company_name, currency, fund_family, 
-            yield, expense_ratio, aum, nav, top_holdings, sector_weights)
-         SELECT ticker_id, asset, company_name, currency, fund_family, 
-            yield, expense_ratio, aum, nav, top_holdings, sector_weights
-            FROM etfs_df;
-      """)
+      try: 
+         db.register("etfs_df", etfs_df)
+         db.execute("""
+            INSERT OR IGNORE INTO etf 
+               (ticker_id, asset, company_name, currency, fund_family, 
+               yield, expense_ratio, aum, nav, top_holdings, sector_weights)
+            SELECT ticker_id, asset, company_name, currency, fund_family, 
+               yield, expense_ratio, aum, nav, top_holdings, sector_weights
+               FROM etfs_df;
+         """)
+      except Exception as e:
+         logger.error(f"Error uploading etfs_df {e}")
 
 
-def upload_transactions(df):
-   # Setting up database connectiond
-   db = get_db_connnection()
+def upload_transactions(df, db):
+   """
+   Function that deals with handling database uploads
+
+   df: pd.DataFrame - transaction/historical data
+   db: Database connection
+
+   """
+   
+   # if dataframe is empty 
+   if df.empty:
+      logger.info("No transactions to upload.")
+      return
+   
+   logger.info("%s transactions to be uploaded",df.shape[0])
+   
+   # 
    df = df[df['Symbol'].notnull()].copy()
-   db_tickers = get_ticker_table() # this returns a df 
+   db_tickers = get_ticker_table(db) # this returns a df 
 
    # creating a list of of tickers not in the database 
    missing = df.loc[~df['Symbol'].isin(db_tickers['ticker_symbol']), 'Symbol'].unique().tolist()
@@ -91,7 +118,7 @@ def upload_transactions(df):
                  ''')
   
    # matching the tickers to their database id 
-   db_tickers = get_ticker_table()  # needs to get new values
+   db_tickers = get_ticker_table(db)  # needs to get new values
    df['ticker_id'] = df['Symbol'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
    df = df.rename(columns={
       'Date': 'date',
@@ -103,13 +130,16 @@ def upload_transactions(df):
       'FXRate': 'fxRate'
    })
 
-   upload_yfinance_info(etfs,stocks) 
+   upload_yfinance_info(etfs,stocks,db) 
 
 
    # reordering the dataframe values to upload into db 
    df = df[['date', 'transaction', 'ticker_id', 'quantity', 'execDate', 'debit', 'credit', 'fxRate']]
 
    # Cleaning up data before loading into database
+   df['date'] = pd.to_datetime(df['date'], errors='coerce')
+   df['execDate'] = pd.to_datetime(df['execDate'], errors='coerce')
+
    df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').round(6)
    df['debit']    = pd.to_numeric(df['debit'], errors='coerce').round(2)
    df['credit']   = pd.to_numeric(df['credit'], errors='coerce').round(2)
@@ -118,7 +148,7 @@ def upload_transactions(df):
    # filling in missing values to clean data
    df = df.fillna({
       'quantity': 0,
-      'execDate': '',
+      # 'execDate': None,
       'debit': 0,
       'credit': 0,
       'fxRate': 0
@@ -133,9 +163,9 @@ def upload_transactions(df):
    """)
 
 
-def upload_history(history_df: pd.DataFrame):
-   db = get_db_connnection()
-   tick_map = get_ticker_table()
+def upload_history(history_df: pd.DataFrame, db):
+   # db = get_db_connnection()
+   tick_map = get_ticker_table(db)
    print(tick_map)
 
  
@@ -173,10 +203,24 @@ def upload_history(history_df: pd.DataFrame):
       SELECT date, ticker_id, adj_close, high, low, close, open, volume
       FROM history_df;
    """)
-
+def upload_email (emails_df : pd.DataFrame, db): 
    
-
-
-
-   #Rename and do droppping tests
+   tick_map = get_ticker_table(db)
+   emails_df["ticker_id"] = emails_df["ticker"].map(tick_map.set_index("ticker_symbol")["ticker_id"])
    
+   db.register('email_df', emails_df)
+   db.execute("""
+      INSERT OR IGNORE INTO Email_Transactions(account, transaction, ticker_id, ticker, quantity, 
+      avg_price, total_cost, debit, date)
+      SELECT account, transaction, ticker_id, ticker, quantity, avg_price, total_cost, debit, date
+      FROM email_df;
+   """)
+
+def update_email_date(con, email_Date, count):
+    con.execute(
+        """
+        INSERT OR IGNORE INTO EmailCheckDate (date, num_emails)
+        VALUES (?, ?)
+        """,
+        (email_Date, count)
+    )

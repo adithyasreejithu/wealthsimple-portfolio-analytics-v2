@@ -6,7 +6,9 @@ PSM_MODE = "--psm 6"
 CPU_WORKERS = os.cpu_count() -1
 PDF_HEADINGS = ["Portfolio Cash", "Portfolio Equities", "Activity - Current period","Transactions for Future Settlement"]
 TRANSACTION_TYPES = ["BUY","DIV","CONT","FPLINT","LOAN","SELL","NRT","RECALL"]
+HANDLED_TYPES = frozenset(["BUY", "DIV", "CONT", "SELL", "LOAN", "NRT", "RECALL", "FPLINT"])
 COLUMNS = ["Stock_ID","Date","Type","ExecutedDate","Shares","FxRate","Value","Credit","Balance"]
+
 
 def get_transaction_dict(default_value=None):
     return {

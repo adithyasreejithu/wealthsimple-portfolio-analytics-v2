@@ -5,7 +5,6 @@ import pytesseract
 import pandas as pd
 from PIL import Image
 from dotenv import load_dotenv
-from collections import defaultdict
 from Config import *
 from system_logger import get_logger
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -13,24 +12,51 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 logger = get_logger(__name__)
 
 load_dotenv()
-DATA_FILES = os.getenv("DATA_FILES")
-
-
-# Completed
-def testingcase():
-    ws = os.environ.get("DATA_FILES")
-    testing_file = Path(ws) / "March_2025.pdf"
-    return testing_file
 
 # Completed
 def check_data_files():
-    df_path = Path(DATA_FILES)
+    """
+    Retrieves wealthsimple files that exist with the folder
+
+    Returns: 
+        list: all pdf files
+    """
+    data_files = os.getenv("DATA_FILES")
+
+    if not data_files:
+        raise EnvironmentError("DATA_FILES environment variable is not set")
+    df_path = Path(data_files)
+
+    df_path = Path(data_files)
     read_df_path = df_path / "Read_Files"
     read_df_path.mkdir(parents=True, exist_ok=True)
     files = list(df_path.glob("*.pdf"))
     return files
 
+def move_read_file(file: Path):
+    """
+    Function resposible for moving files that have been read
+    """
+    subfolder = file.parent / "Read_Files"
+    subfolder.mkdir(exist_ok=True)
+
+    new_path = subfolder / file.name
+
+    if new_path.exists():
+        raise FileExistsError(f"{new_path} already exists")
+
+    logger.info(f"Moving {file.name} to {subfolder}")
+    file.rename(new_path)
+
+
 def ocr_extract(page_num, file_path):
+    """
+    OCR Extracts data from indiviudal page 
+
+    Returns: 
+        int: page number 
+        str: of the page data
+    """
     with fitz.open(file_path) as doc: 
         page = doc.load_page(page_num)
         pix = page.get_pixmap(dpi=DPI)
@@ -50,36 +76,27 @@ def parse_transactions(text: str):
   
     return df
 
-def merge_df_lines(text: str) -> str : 
-    merged_lines = []
-
-    for line in text.splitlines():
-        line = line.strip()
-        if not line: 
-            continue
-        if line not in TRANSACTION_TYPES:
-            merged_lines.append(line)
-        else:
-            if merged_lines:
-                merged_lines.append(line)
-
-
-
 # In progress
 def extraction_pipline(file):
     logger.info("started extraction process")
+    logger.info(f"Reading {file.name}")
     
     # CPU Setup 
     with fitz.open(file) as pdf: 
         page_count = pdf.page_count
     
     results = {}
+
+    # runnning parallel process to extract data
     with ProcessPoolExecutor(max_workers= CPU_WORKERS) as executor:
         futures = [executor.submit(ocr_extract,i,file) for i in range(page_count)]
 
         for future in as_completed(futures):
-            page_num, text = future.result()
-            results[page_num] = text
+            try:
+                page_num, text = future.result()
+                results[page_num] = text
+            except Exception as e:
+                logger.error("OCR failed on a page of %s: %s", file.name, e, exc_info=True)
 
     page_contents = "".join(results[i] for i in sorted(results.keys()))
 
@@ -101,8 +118,6 @@ def extraction_pipline(file):
     combined_activity = "\n".join(
         mydict[k] for k in mydict if k.startswith("Activity - Current period")
     )
-
-    # print(combined_activity)
 
     # Data Transformation
     all_dfs = []
@@ -149,15 +164,11 @@ def extraction_pipline(file):
                 df = parse_transactions(full_line)
                 all_dfs.append(df)
 
+    if not all_dfs:
+        logger.warning("No transactions parsed from %s", file.name)
+        return pd.DataFrame()
 
-    if all_dfs:
-        transaction_df = pd.concat(all_dfs, ignore_index=True)
-
-    return transaction_df
+    return pd.concat(all_dfs, ignore_index=True)
     
 
 
-# testing case
-if __name__ == "__main__":
-    test_file = testingcase() # Testing Case
-    extraction_pipline(test_file)

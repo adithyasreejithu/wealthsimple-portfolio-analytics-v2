@@ -4,13 +4,13 @@ import duckdb as dd
 from dotenv import load_dotenv
 
 load_dotenv()
-DB_PATH = os.getenv("DB_PATH")
+# DB_PATH = os.getenv("DB_PATH_TEST")
 
-def get_db_connnection(): 
-    return dd.connect(DB_PATH)
+# def get_db_connnection(): 
+    # return dd.connect(DB_PATH)
 
-def get_ticker_table():
-    con = get_db_connnection()
+def get_ticker_table(con):
+    # con = get_db_connnection()
     return con.execute(
         '''
             SELECT ticker_id, ticker_symbol 
@@ -18,8 +18,8 @@ def get_ticker_table():
         '''
     ).fetchdf()
 
-def get_last_date_stored():
-    con = get_db_connnection()
+def get_last_date_stored(con):
+    # con = get_db_connnection()
     df = con.execute(
         '''
         SELECT MAX(date) AS lastDate
@@ -35,8 +35,8 @@ def get_last_date_stored():
     return result.date()
 
 
-def get_all_tickers():
-    con = get_db_connnection()
+def get_all_tickers(con):
+    # con = get_db_connnection()
     return con.execute(
         '''
         SELECT 
@@ -52,3 +52,19 @@ def get_all_tickers():
             ON t.ticker_id = e.ticker_id;
         '''
     ).fetchdf()
+
+def get_last_date_stored_email(con):
+    # con = get_db_connnection()
+    df = con.execute(
+        '''
+        SELECT MAX(date) AS lastDate
+        FROM main.Email_Transactions;
+        '''
+    ).fetchdf()
+
+    result = df["lastDate"].iloc[0]
+
+    if result is None or pd.isna(result):
+        return None
+
+    return result.date()
