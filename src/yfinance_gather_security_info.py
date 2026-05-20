@@ -136,7 +136,12 @@ def get_security_history(con):
         df.columns.name = None
         dfs.append(df)
 
-    combined_df = pd.concat(dfs, ignore_index=True)
-    
-    return combined_df
+    combined_df = historical_data.stack(level=0, future_stack=True).reset_index()
+    combined_df.columns.name = None
+    combined_df = combined_df.rename(columns={"level_1": "Ticker"})
 
+    logger.info("Historical data pull complete | Rows: %d", len(combined_df))
+
+    combined_df.to_csv("yFinance_Data.csv")
+
+    return combined_df

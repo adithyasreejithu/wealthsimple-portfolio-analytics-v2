@@ -9,6 +9,159 @@ from yfinance_gather_security_info import get_security_info
 
 logger = get_logger(__name__)
 
+# def upload_yfinance_info(etfs, stocks, db):
+#    """
+#    Uploads etf and stock DataFrame 
+   
+#    Arguments 
+#    etfs -- df holding etf information
+#    stocks -- DataFrame holding etf information
+#    """
+#    # db = get_db_connnection()
+#    db_tickers = get_ticker_table(db) 
+
+#    etfs_rows = []
+#    stocks_rows = []
+
+#    for ticker, data in etfs.items():
+#       row = {"ticker":ticker}
+#       row.update(data)
+#       etfs_rows.append(row)
+        
+#    etfs_df = pd.DataFrame(etfs_rows)
+
+
+#    if not etfs_df.empty:
+#       etfs_df['ticker_id'] = etfs_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
+#       etfs_df.drop("ticker",axis=1,inplace=True)
+
+#       # Convert to proper JSON before uploading
+#       etfs_df['top_holdings'] = etfs_df['top_holdings'].apply(
+#          lambda x: x.to_json(orient="records") if isinstance(x, pd.DataFrame) else json.dumps(x) if x is not None else None
+#       )
+#       etfs_df['sector_weights'] = etfs_df['sector_weights'].apply(
+#          lambda x: x.to_json(orient="records") if isinstance(x, pd.DataFrame) else json.dumps(x) if x is not None else None
+#       )
+   
+#    for ticker, data in stocks.items():
+#       row = {"ticker": ticker}
+#       row.update(data)
+#       stocks_rows.append(row)
+        
+#    stocks_df = pd.DataFrame(stocks_rows)
+   
+#    if not stocks_df.empty:
+#       stocks_df['ticker_id'] = stocks_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
+#       stocks_df.drop("ticker",axis=1,inplace=True)
+   
+#    if not stocks_df.empty:
+#       try: 
+#          db.register("stocks_df", stocks_df)
+#          db.execute("""
+#             INSERT OR IGNORE INTO stocks 
+#                (ticker_id, asset, company_name, exchange, currency, sector, industry)
+#             SELECT ticker_id, asset, company_name, exchange, currency, sector, industry
+#             FROM stocks_df;
+#          """)
+#       except Exception as e: 
+#          logger.error(f"Error uploading stock_df {e}")
+   
+#    if not etfs_df.empty:
+#       try: 
+#          db.register("etfs_df", etfs_df)
+#          db.execute("""
+#             INSERT OR IGNORE INTO etf 
+#                (ticker_id, asset, company_name, currency, fund_family, 
+#                yield, expense_ratio, aum, nav, top_holdings, sector_weights)
+#             SELECT ticker_id, asset, company_name, currency, fund_family, 
+#                yield, expense_ratio, aum, nav, top_holdings, sector_weights
+#                FROM etfs_df;
+#          """)
+#       except Exception as e:
+#          logger.error(f"Error uploading etfs_df {e}")
+
+
+# def upload_transactions(df, db):
+#    """
+#    Function that deals with handling database uploads
+
+#    df: pd.DataFrame - transaction/historical data
+#    db: Database connection
+
+#    """
+   
+#    # if dataframe is empty 
+#    if df.empty:
+#       logger.info("No transactions to upload.")
+#       return
+   
+#    logger.info("%s transactions to be uploaded",df.shape[0])
+   
+#    # 
+#    df = df[df['Symbol'].notnull()].copy()
+#    db_tickers = get_ticker_table(db) # this returns a df 
+
+#    # creating a list of of tickers not in the database 
+#    missing = df.loc[~df['Symbol'].isin(db_tickers['ticker_symbol']), 'Symbol'].unique().tolist()
+#    etfs, stocks  = get_security_info(missing)
+
+#    # adding the missing tickers into the database 
+#    if missing:
+#       new_tickers_df = pd.DataFrame({'ticker_symbol': missing})
+
+#       db.register("new_tickers_df", new_tickers_df)
+#       db.execute('''
+#                INSERT OR IGNORE INTO tickers (ticker_symbol)
+#                SELECT ticker_symbol 
+#                FROM new_tickers_df
+#                WHERE ticker_symbol NOT IN (SELECT ticker_symbol FROM tickers);
+#                  ''')
+  
+#    # matching the tickers to their database id 
+#    db_tickers = get_ticker_table(db)  # needs to get new values
+#    df['ticker_id'] = df['Symbol'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
+#    df = df.rename(columns={
+#       'Date': 'date',
+#       'Type': 'transaction',
+#       'Quantity': 'quantity',
+#       'ExecDate': 'execDate',
+#       'Debit': 'debit',
+#       'Credit': 'credit',
+#       'FXRate': 'fxRate'
+#    })
+
+#    upload_yfinance_info(etfs,stocks,db) 
+
+
+#    # reordering the dataframe values to upload into db 
+#    df = df[['date', 'transaction', 'ticker_id', 'quantity', 'execDate', 'debit', 'credit', 'fxRate']]
+
+#    # Cleaning up data before loading into database
+#    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+#    df['execDate'] = pd.to_datetime(df['execDate'], errors='coerce')
+
+#    df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').round(6)
+#    df['debit']    = pd.to_numeric(df['debit'], errors='coerce').round(2)
+#    df['credit']   = pd.to_numeric(df['credit'], errors='coerce').round(2)
+#    df['fxRate']   = pd.to_numeric(df['fxRate'], errors='coerce').round(4)
+
+#    # filling in missing values to clean data
+#    df = df.fillna({
+#       'quantity': 0,
+#       # 'execDate': None,
+#       'debit': 0,
+#       'credit': 0,
+#       'fxRate': 0
+#    })
+
+#    # adding transaction data to the db
+#    db.register("transactions_df", df)
+#    db.execute("""
+#         INSERT OR IGNORE INTO transactions (date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate)
+#         SELECT date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate
+#         FROM transactions_df;
+#    """)
+
 def upload_yfinance_info(etfs, stocks, db):
    """
    Uploads etf and stock DataFrame 
@@ -17,8 +170,11 @@ def upload_yfinance_info(etfs, stocks, db):
    etfs -- df holding etf information
    stocks -- DataFrame holding etf information
    """
+   logger.info("Starting upload_yfinance_info | ETFs: %d, Stocks: %d", len(etfs), len(stocks))
+
    # db = get_db_connnection()
    db_tickers = get_ticker_table(db) 
+   logger.debug("Fetched ticker table with %d rows", len(db_tickers))
 
    etfs_rows = []
    stocks_rows = []
@@ -30,8 +186,8 @@ def upload_yfinance_info(etfs, stocks, db):
         
    etfs_df = pd.DataFrame(etfs_rows)
 
-
    if not etfs_df.empty:
+      logger.info("Processing %d ETF rows", len(etfs_df))
       etfs_df['ticker_id'] = etfs_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
       etfs_df.drop("ticker",axis=1,inplace=True)
 
@@ -42,6 +198,9 @@ def upload_yfinance_info(etfs, stocks, db):
       etfs_df['sector_weights'] = etfs_df['sector_weights'].apply(
          lambda x: x.to_json(orient="records") if isinstance(x, pd.DataFrame) else json.dumps(x) if x is not None else None
       )
+      logger.debug("ETF JSON serialization complete")
+   else:
+      logger.info("No ETF rows to process, skipping")
    
    for ticker, data in stocks.items():
       row = {"ticker": ticker}
@@ -51,8 +210,11 @@ def upload_yfinance_info(etfs, stocks, db):
    stocks_df = pd.DataFrame(stocks_rows)
    
    if not stocks_df.empty:
+      logger.info("Processing %d stock rows", len(stocks_df))
       stocks_df['ticker_id'] = stocks_df['ticker'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
       stocks_df.drop("ticker",axis=1,inplace=True)
+   else:
+      logger.info("No stock rows to process, skipping")
    
    if not stocks_df.empty:
       try: 
@@ -63,6 +225,7 @@ def upload_yfinance_info(etfs, stocks, db):
             SELECT ticker_id, asset, company_name, exchange, currency, sector, industry
             FROM stocks_df;
          """)
+         logger.info("Successfully uploaded %d stock rows", len(stocks_df))
       except Exception as e: 
          logger.error(f"Error uploading stock_df {e}")
    
@@ -77,8 +240,11 @@ def upload_yfinance_info(etfs, stocks, db):
                yield, expense_ratio, aum, nav, top_holdings, sector_weights
                FROM etfs_df;
          """)
+         logger.info("Successfully uploaded %d ETF rows", len(etfs_df))
       except Exception as e:
          logger.error(f"Error uploading etfs_df {e}")
+
+   logger.info("upload_yfinance_info complete")
 
 
 def upload_transactions(df, db):
@@ -89,21 +255,36 @@ def upload_transactions(df, db):
    db: Database connection
 
    """
-   
+   if df is None: 
+      logger.info("No transactions to upload.")
+      return
+
    # if dataframe is empty 
    if df.empty:
       logger.info("No transactions to upload.")
       return
    
+   logger.info("Starting upload_transactions | Shape: %s", df.shape)
    logger.info("%s transactions to be uploaded",df.shape[0])
    
-   # 
-   df = df[df['Symbol'].notnull()].copy()
-   db_tickers = get_ticker_table(db) # this returns a df 
+   #
+   #
+   #
+   #
+   df = df[df['ticker_id'].notnull()].copy()
+   logger.debug("%d transactions remaining after dropping null symbols", len(df))
 
+   db_tickers = get_ticker_table(db) # this returns a df 
+   logger.debug("Fetched ticker table with %d existing tickers", len(db_tickers))
+
+   #
+   #
    # creating a list of of tickers not in the database 
-   missing = df.loc[~df['Symbol'].isin(db_tickers['ticker_symbol']), 'Symbol'].unique().tolist()
+   missing = df.loc[~df['ticker_id'].isin(db_tickers['ticker_symbol']), 'ticker_id'].unique().tolist()
+   logger.info("%d new tickers not in DB: %s", len(missing), missing)
+
    etfs, stocks  = get_security_info(missing)
+   logger.info("Retrieved security info | ETFs: %d, Stocks: %d", len(etfs), len(stocks))
 
    # adding the missing tickers into the database 
    if missing:
@@ -116,10 +297,15 @@ def upload_transactions(df, db):
                FROM new_tickers_df
                WHERE ticker_symbol NOT IN (SELECT ticker_symbol FROM tickers);
                  ''')
+      logger.info("Inserted %d new tickers into DB", len(missing))
   
    # matching the tickers to their database id 
    db_tickers = get_ticker_table(db)  # needs to get new values
-   df['ticker_id'] = df['Symbol'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
+   logger.debug("Re-fetched ticker table with %d rows", len(db_tickers))
+
+   # df['ticker_id'] = df['Symbol'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
+   df['ticker_id'] = df['ticker_id'].map(db_tickers.set_index('ticker_symbol')['ticker_id'])
+
    df = df.rename(columns={
       'Date': 'date',
       'Type': 'transaction',
@@ -132,9 +318,8 @@ def upload_transactions(df, db):
 
    upload_yfinance_info(etfs,stocks,db) 
 
-
    # reordering the dataframe values to upload into db 
-   df = df[['date', 'transaction', 'ticker_id', 'quantity', 'execDate', 'debit', 'credit', 'fxRate']]
+   df = df[['date', 'transaction', 'ticker_id', 'quantity', 'execDate', 'debit', 'credit', 'fx_rate']]
 
    # Cleaning up data before loading into database
    df['date'] = pd.to_datetime(df['date'], errors='coerce')
@@ -143,7 +328,11 @@ def upload_transactions(df, db):
    df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').round(6)
    df['debit']    = pd.to_numeric(df['debit'], errors='coerce').round(2)
    df['credit']   = pd.to_numeric(df['credit'], errors='coerce').round(2)
-   df['fxRate']   = pd.to_numeric(df['fxRate'], errors='coerce').round(4)
+   df['fxRate']   = pd.to_numeric(df['fx_rate'], errors='coerce').round(4)
+
+   null_ticker_ids = df['ticker_id'].isnull().sum()
+   if null_ticker_ids:
+      logger.warning("%d rows have unmapped ticker_ids and may be skipped on insert", null_ticker_ids)
 
    # filling in missing values to clean data
    df = df.fillna({
@@ -153,6 +342,7 @@ def upload_transactions(df, db):
       'credit': 0,
       'fxRate': 0
    })
+   logger.debug("Data cleaning complete, inserting transactions into DB")
 
    # adding transaction data to the db
    db.register("transactions_df", df)
@@ -161,6 +351,7 @@ def upload_transactions(df, db):
         SELECT date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate
         FROM transactions_df;
    """)
+   logger.info("upload_transactions complete | %d rows submitted", len(df))
 
 
 def upload_history(history_df: pd.DataFrame, db):
