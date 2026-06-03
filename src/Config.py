@@ -9,6 +9,8 @@ TRANSACTION_TYPES = ["BUY","DIV","CONT","FPLINT","LOAN","SELL","NRT","RECALL"]
 B_TYPES = ["BUY","DIV","LOAN","SELL","RECALL"]
 
 HANDLED_TYPES = frozenset(["BUY", "DIV", "CONT", "SELL", "LOAN", "NRT", "RECALL", "FPLINT"])
+SECURITY_TRANSACTION_TYPES = frozenset(["BUY", "SELL", "DIV", "LOAN", "RECALL"])
+CASH_TRANSACTION_TYPES = frozenset(["CONT", "NRT", "FPLINT"])
 COLUMNS = ["Stock_ID","Date","Type","ExecutedDate","Shares","FxRate","Value","Credit","Balance"]
 SETTLEMENT = [
         "Transactions for Future Settlement",
@@ -111,6 +113,12 @@ def get_pattern_two():
 
 def get_B_types():
     return B_TYPES
+
+def get_security_transaction_types():
+    return SECURITY_TRANSACTION_TYPES
+
+def get_cash_transaction_types():
+    return CASH_TRANSACTION_TYPES
 
 def get_settlement_keywords():
     return SETTLEMENT

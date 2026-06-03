@@ -126,6 +126,22 @@ def _deploy_schema(con: dd.DuckDBPyConnection) -> None:
             );
         ''')
 
+        con.execute("CREATE SEQUENCE IF NOT EXISTS seq_cash_trans_id START 1;")
+
+        con.execute('''
+            CREATE TABLE IF NOT EXISTS cash_transactions (
+                id          BIGINT PRIMARY KEY DEFAULT nextval('seq_cash_trans_id'),
+                date        DATE NOT NULL,
+                transaction TEXT NOT NULL,
+                execDate    DATE,
+                debit       DECIMAL(18,4) NOT NULL DEFAULT 0,
+                credit      DECIMAL(18,4) NOT NULL DEFAULT 0,
+                fxRate      DECIMAL(10,6) NOT NULL DEFAULT 0,
+                balance     DECIMAL(18,4),
+                UNIQUE (date, transaction, execDate, debit, credit, fxRate, balance)
+            );
+        ''')
+
         con.execute('''
             CREATE TABLE IF NOT EXISTS HistoricalRecords (
                 ticker_id BIGINT NOT NULL,
@@ -201,10 +217,11 @@ def reset_database(db_path: str = DB_PATH, *, confirm: bool = False) -> None:
         raise RuntimeError("Pass confirm=True to reset. This is irreversible.")
     logger.warning("Resetting database at %s", db_path)
     with get_connection(db_path) as con:
-        for table in ("EmailTransactions", "EmailCheckDate", "transactions",
-                      "stocks", "etf", "tickers", "HistoricalRecords"):
+        for table in ("Email_Transactions", "EmailCheckDate", "cash_transactions",
+                      "transactions", "HistoricalRecords", "stocks", "etf", "tickers"):
             con.execute(f"DROP TABLE IF EXISTS {table};")
-        for seq in ("seq_tickers_id", "seq_trans_id", "seq_email_trans_id"):
+        for seq in ("seq_tickers_id", "seq_trans_id", "seq_cash_trans_id",
+                    "seq_email_store_id", "seq_email_trans_id"):
             con.execute(f"DROP SEQUENCE IF EXISTS {seq};")
     logger.info("Database reset complete")
 
