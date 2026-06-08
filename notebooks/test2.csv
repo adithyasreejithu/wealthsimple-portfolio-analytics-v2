@@ -1,0 +1,16 @@
+,0,1,2,3,4
+2,2025-02-03 NRT,Non-resident tax (executed at 2025-02-03),$0.25,$0.00,$88.52
+3,2025-02-03 DIV,"T - AT&T, Inc.: Cash dividend distribution, received on 2025-02-03, record date",$0.00,$1.68,$88.52
+4,,"of 2025-01-10, FX Rate: 1.4719",,,
+5,"2025-02-04
+BUY",CDZ - iShares S&P/TSX Canadian Dividend ETF: Bought 0.0031 shares,$0.11,$0.00,$88.41
+6,,(executed at 2025-02-03),,,
+7,"2025-02-04
+BUY","T - AT&T, Inc.: Bought 0.0394 shares (executed at 2025-02-03), FX Rate:",$1.43,$0.00,$86.98
+8,,1.4885,,,
+9,2025-02-04 DIV,"ZEB - BMO Equal Weight Banks Index ETF: Cash dividend distribution,",$0.00,$0.28,$87.26
+10,,"received on 2025-02-04, record date of 2025-01-30",,,
+11,"2025-02-06
+BUY",ZEB - BMO Equal Weight Banks Index ETF: Bought 0.0067 shares (executed,$0.28,$0.00,$86.98
+12,,at 2025-02-05),,,
+13,2025-02-10 DIV,,$0.00,$0.19,$87.17

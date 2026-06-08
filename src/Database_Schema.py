@@ -6,7 +6,7 @@ from system_logger import get_logger
 from typing import Generator, Final
 
 # DB_PATH: Final[str] = os.getenv("DB_PATH_TEST", "Data/WealthSimple_backup.db")
-DB_PATH: Final[str] = os.getenv("DB_PATH", "Data/WealthSimpleProj.db")
+DB_PATH: Final[str] = os.getenv("DB_PATH", "Data/PRD_WealthSimple.db")
 
 
 logger = get_logger(__name__)
@@ -226,4 +226,4 @@ def reset_database(db_path: str = DB_PATH, *, confirm: bool = False) -> None:
     logger.info("Database reset complete")
 
 
-# reset_database(DB_PATH, confirm=True)
+# reset_database(DB_PATH, confirm=True)2

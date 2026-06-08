@@ -1,0 +1,64 @@
+,0,1,2,3,4,5
+0,,Activity - Current period,,,,
+1,Date,Transaction Description,,,Debit ($) Credit ($) Balance ($),
+2,2026-01-02,BUY,BN - Brookfield Corp.: Bought 0.0039 shares at $63.19 per share (executed at,$0.25,$0.00,$0.13
+3,,,2025-12-31),,,
+4,2026-01-02 DIV,,"WN - George Weston Ltd.: Cash dividend distribution, received on 2026-01-02,",$0.00,$0.49,$0.62
+5,,,record date of 2025-12-15,,,
+6,2026-01-02,LOAN,ZGLD - BMO Gold Bullion ETF - CAD: 4.0000 Shares on loan (executed at,$0.00,$0.00,$0.62
+7,,,2026-01-02),,,
+8,2026-01-05,BUY,WN - George Weston Ltd.: Bought 0.0051 shares at $95.33 per share,$0.49,$0.00,$0.13
+9,,,(executed at 2026-01-02),,,
+10,2026-01-05 DIV,,"CDZ - iShares S&P/TSX Canadian Dividend ETF: Cash dividend distribution,",$0.00,$0.12,$0.25
+11,,,"received on 2026-01-05, record date of 2025-12-30",,,
+12,2026-01-05 DIV,,"ZEB - BMO Equal Weight Banks Index ETF: Cash dividend distribution,",$0.00,$0.30,$0.55
+13,,,"received on 2026-01-05, record date of 2025-12-30",,,
+14,2026-01-05 DIV,,"ZEQT - BMO All-Equity ETF: Cash dividend distribution, received on",$0.00,$0.23,$0.78
+15,,,"2026-01-05, record date of 2025-12-30",,,
+16,2026-01-05 DIV,,"XEQT - iShares Core Equity ETF Portfolio: Cash dividend distribution, received",$0.00,$2.37,$3.15
+17,,,"on 2026-01-05, record date of 2025-12-30",,,
+18,2026-01-06,BUY,CDZ - iShares S&P/TSX Canadian Dividend ETF: Bought 0.0029 shares at,$0.12,$0.00,$3.03
+19,,,$41.31 per share (executed at 2026-01-05),,,
+20,2026-01-06,BUY,ZEB - BMO Equal Weight Banks Index ETF: Bought 0.0050 shares at $59.60,$0.30,$0.00,$2.73
+21,,,per share (executed at 2026-01-05),,,
+22,2026-01-06 RECALL,,ZGLD - BMO Gold Bullion ETF - CAD: Loan of 4.0000 shares terminated,$0.00,$0.00,$2.73
+23,,,(executed at 2026-01-06),,,
+24,2026-01-07,BUY,ZEQT - BMO All-Equity ETF: Bought 0.0110 shares at $20.86 per share,$0.23,$0.00,$2.50
+25,,,(executed at 2026-01-06),,,
+26,2026-01-07,BUY,XEQT - iShares Core Equity ETF Portfolio: Bought 0.0581 shares at $40.78,$2.37,$0.00,$0.13
+27,,,per share (executed at 2026-01-06),,,
+28,2026-01-07 DIV,,VDY - Vanguard Investments Canada Inc. - FTSE Canadian High Dividend,$0.00,$0.35,$0.48
+29,,,"Yield Index ETF: Cash dividend distribution, received on 2026-01-07, record",,,
+30,,,date of 2025-12-30,,,
+31,2026-01-07 DIV,,"VFV - Vanguard S&P 500 Index ETF: Cash dividend distribution, received on",$0.00,$1.25,$1.73
+32,,,"2026-01-07, record date of 2025-12-30",,,
+33,2026-01-09,BUY,VDY - Vanguard Investments Canada Inc. - FTSE Canadian High Dividend,$0.35,$0.00,$1.38
+34,,,Yield Index ETF: Bought 0.0056 shares at $62.17 per share (executed at,,,
+35,,,2026-01-08),,,
+36,2026-01-09,BUY,VFV - Vanguard S&P 500 Index ETF: Bought 0.0073 shares at $170.43 per,$1.24,$0.00,$0.14
+37,,,share (executed at 2026-01-08),,,
+38,2026-01-15 DIV,,"PZA - Pizza Pizza Royalty Corp: Cash dividend distribution, received on",$0.00,$0.33,$0.47
+39,,,"2026-01-15, record date of 2025-12-31",,,
+40,2026-01-15,FPLINT,Stock lending monthly interest payment,$0.00,$0.01,$0.48
+41,2026-01-16,BUY,PZA - Pizza Pizza Royalty Corp: Bought 0.0204 shares at $16.16 per share,$0.33,$0.00,$0.15
+42,,,(executed at 2026-01-15),,,
+43,2026-01-16,LOAN,"T - AT&T, Inc.: 3.0000 Shares on loan (executed at 2026-01-16)",$0.00,$0.00,$0.15
+44,2026-01-20 RECALL,,"T - AT&T, Inc.: Loan of 3.0000 shares terminated (executed at 2026-01-20)",$0.00,$0.00,$0.15
+45,2026-01-21,LOAN,ZGLD - BMO Gold Bullion ETF - CAD: 4.0000 Shares on loan (executed at,$0.00,$0.00,$0.15
+46,,,2026-01-21),,,
+47,2026-01-22 RECALL,,ZGLD - BMO Gold Bullion ETF - CAD: Loan of 4.0000 shares terminated,$0.00,$0.00,$0.15
+48,,,(executed at 2026-01-22),,,
+49,2026-01-23 DIV,,VDY - Vanguard Investments Canada Inc. - FTSE Canadian High Dividend,$0.00,$0.35,$0.50
+50,,,"Yield Index ETF: Cash dividend distribution, received on 2026-01-23, record",,,
+51,,,date of 2026-01-16,,,
+52,2026-01-26,BUY,VDY - Vanguard Investments Canada Inc. - FTSE Canadian High Dividend,$0.35,$0.00,$0.15
+53,,,Yield Index ETF: Bought 0.0055 shares at $63.26 per share (executed at,,,
+54,,,2026-01-23),,,
+55,2026-01-28,LOAN,PZA - Pizza Pizza Royalty Corp: 2.0000 Shares on loan (executed at,$0.00,$0.00,$0.15
+56,,,2026-01-28),,,
+57,2026-01-29 RECALL,,PZA - Pizza Pizza Royalty Corp: Loan of 2.0000 shares terminated (executed,$0.00,$0.00,$0.15
+58,,,at 2026-01-29),,,
+59,2026-01-30 DIV,,"CDZ - iShares S&P/TSX Canadian Dividend ETF: Cash dividend distribution,",$0.00,$0.12,$0.27
+60,,,"received on 2026-01-30, record date of 2026-01-27",,,
+61,2026-01-30,LOAN,SCHD - Schwab US Dividend Equity ETF: 3.0000 Shares on loan (executed at,$0.00,$0.00,$0.27
+62,,,2026-01-30),,,

@@ -1,0 +1,331 @@
+{
+    "VDY.TO": {
+        "MER": 0,
+        "AUM": 5941656576,
+        "Name": "Vanguard FTSE Canadian High Dividend Yield Index ETF",
+        "Type": "Dividend",
+        "3Y": 0.21096809,
+        "5Y": 0.1852515,
+        "yield": 0.0376,
+        "top_holdings": {
+            "RY": 0.15489,
+            "TD": 0.1042019,
+            "ENB.TO": 0.0698627,
+            "BMO.TO": 0.0642992,
+            "BNS.TO": 0.061230697,
+            "CM.TO": 0.0569738,
+            "CNQ.TO": 0.049861997,
+            "MFC.TO": 0.0426467,
+            "SU.TO": 0.0423287,
+            "TRP.TO": 0.039958403
+        },
+        "sector_weights": {
+            "realestate": 0.0,
+            "consumer_cyclical": 0.028099999,
+            "basic_materials": 0.043,
+            "consumer_defensive": 0.0041,
+            "technology": 0.005,
+            "communication_services": 0.0346,
+            "financial_services": 0.5689,
+            "utilities": 0.048,
+            "industrials": 0.0021,
+            "energy": 0.2662,
+            "healthcare": 0.0
+        }
+    },
+    "CDZ.TO": {
+        "MER": 0,
+        "AUM": 1087503104,
+        "Name": "iShares S&P/TSX Canadian Dividend Aristocrats Index ETF Common Class",
+        "Type": "Dividend",
+        "3Y": 0.16736521,
+        "5Y": 0.1372849,
+        "yield": 0.0342,
+        "top_holdings": {
+            "T.TO": 0.033930298,
+            "SOBO.TO": 0.0271039,
+            "GEI.TO": 0.0255371,
+            "ENB.TO": 0.021443998,
+            "WTE.TO": 0.0213271,
+            "ENGH.TO": 0.0212977,
+            "CGO.TO": 0.020804701,
+            "PPL.TO": 0.0202955,
+            "CRT-UN.TO": 0.0202686,
+            "CCA.TO": 0.0195866
+        },
+        "sector_weights": {
+            "realestate": 0.0946,
+            "consumer_cyclical": 0.0799,
+            "basic_materials": 0.0344,
+            "consumer_defensive": 0.0699,
+            "technology": 0.0319,
+            "communication_services": 0.084300004,
+            "financial_services": 0.18090001,
+            "utilities": 0.088199995,
+            "industrials": 0.1295,
+            "energy": 0.2065,
+            "healthcare": 0.0
+        }
+    },
+    "XEQT.TO": {
+        "MER": 0,
+        "AUM": 13506471936,
+        "Name": "iShares Core Equity ETF Portfolio",
+        "Type": "Broad Equity",
+        "3Y": 0.2115702,
+        "5Y": 0.1406091,
+        "yield": 0.0163,
+        "top_holdings": {
+            "XIC": 0.2675458,
+            "XEF.TO": 0.2529597,
+            "ITOT": 0.2191925,
+            "XTOT.TO": 0.20418051,
+            "XEC": 0.0534824
+        },
+        "sector_weights": {
+            "realestate": 0.0234,
+            "consumer_cyclical": 0.083500005,
+            "basic_materials": 0.0809,
+            "consumer_defensive": 0.0471,
+            "technology": 0.1997,
+            "communication_services": 0.065,
+            "financial_services": 0.21,
+            "utilities": 0.0279,
+            "industrials": 0.1225,
+            "energy": 0.0683,
+            "healthcare": 0.0716
+        }
+    },
+    "VFV.TO": {
+        "MER": 0,
+        "AUM": 28274837504,
+        "Name": "Vanguard S&P 500 Index ETF",
+        "Type": "S&P 500",
+        "3Y": 0.22055781,
+        "5Y": 0.1579883,
+        "yield": 0.0091,
+        "top_holdings": {
+            "VOO": 1.0
+        },
+        "sector_weights": {
+            "realestate": 0.0183,
+            "consumer_cyclical": 0.10569999,
+            "basic_materials": 0.0165,
+            "consumer_defensive": 0.047199998,
+            "technology": 0.3514,
+            "communication_services": 0.1091,
+            "financial_services": 0.13,
+            "utilities": 0.0225,
+            "industrials": 0.075,
+            "energy": 0.028199999,
+            "healthcare": 0.096099995
+        }
+    },
+    "INDA": {
+        "MER": 0,
+        "AUM": 9099641856,
+        "Name": "iShares MSCI India ETF",
+        "Type": "Country",
+        "3Y": 0.1093233,
+        "5Y": 0.0618009,
+        "yield": 0.0,
+        "top_holdings": {
+            "HDFCBANK.NS": 0.0774204,
+            "RELIANCE.NS": 0.062270697,
+            "ICICIBANK.NS": 0.051959902,
+            "INFY.NS": 0.0399671,
+            "BHARTIARTL.NS": 0.0370188,
+            "XTSLA": 0.027698701,
+            "M&M.NS": 0.023455,
+            "AXISBANK.BO": 0.0230589,
+            "TCS.NS": 0.020706698,
+            "LT.NS": 0.019423
+        },
+        "sector_weights": {
+            "realestate": 0.012999999,
+            "consumer_cyclical": 0.1251,
+            "basic_materials": 0.08180001,
+            "consumer_defensive": 0.0598,
+            "technology": 0.103599995,
+            "communication_services": 0.0482,
+            "financial_services": 0.2929,
+            "utilities": 0.0368,
+            "industrials": 0.0922,
+            "energy": 0.0907,
+            "healthcare": 0.0559
+        }
+    },
+    "SCHD": {
+        "MER": 0,
+        "AUM": 78399782912,
+        "Name": "Schwab U.S. Dividend Equity ETF",
+        "Type": "Dividend",
+        "3Y": 0.121935196,
+        "5Y": 0.1055999,
+        "yield": 0.035099998,
+        "top_holdings": {
+            "LMT": 0.0491187,
+            "TXN": 0.043710798,
+            "CVX": 0.043211497,
+            "COP": 0.0420383,
+            "VZ": 0.0405344,
+            "BMY": 0.040001,
+            "MRK": 0.0399257,
+            "MO": 0.0392987,
+            "KO": 0.0391208,
+            "HD": 0.0387548
+        },
+        "sector_weights": {
+            "realestate": 0.0,
+            "consumer_cyclical": 0.0987,
+            "basic_materials": 0.0117999995,
+            "consumer_defensive": 0.1824,
+            "technology": 0.0971,
+            "communication_services": 0.0429,
+            "financial_services": 0.0915,
+            "utilities": 0.0004,
+            "industrials": 0.114300005,
+            "energy": 0.2079,
+            "healthcare": 0.1528
+        }
+    },
+    "ZEB.TO": {
+        "MER": 0,
+        "AUM": 5584858112,
+        "Name": "BMO Equal Weight Banks Index ETF",
+        "Type": "Sector",
+        "3Y": 0.2495707,
+        "5Y": 0.1927329,
+        "yield": 0.0298,
+        "top_holdings": {
+            "TD": 0.1786007,
+            "BNS.TO": 0.17176649,
+            "CM.TO": 0.16862221,
+            "RY": 0.1671588,
+            "NA.TO": 0.1577849,
+            "BMO.TO": 0.15597649
+        },
+        "sector_weights": {
+            "realestate": 0.0,
+            "consumer_cyclical": 0.0,
+            "basic_materials": 0.0,
+            "consumer_defensive": 0.0,
+            "technology": 0.0,
+            "communication_services": 0.0,
+            "financial_services": 1.0,
+            "utilities": 0.0,
+            "industrials": 0.0,
+            "energy": 0.0,
+            "healthcare": 0.0
+        }
+    },
+    "SPLG": {
+        "MER": 0,
+        "AUM": 97328324608,
+        "Name": "State Street SPDR Portfolio S&P 500 ETF",
+        "Type": "S&P 500",
+        "3Y": 0.21311991,
+        "5Y": 0.1491008,
+        "yield": 0.0113,
+        "top_holdings": {
+            "NVDA": 0.073789805,
+            "AAPL": 0.070704795,
+            "MSFT": 0.0624858,
+            "AMZN": 0.0386719,
+            "AVGO": 0.0323825,
+            "GOOGL": 0.031821597,
+            "GOOG": 0.025541,
+            "META": 0.0240115,
+            "TSLA": 0.020624101,
+            "BRK-B": 0.0160976
+        },
+        "sector_weights": {
+            "realestate": 0.0187,
+            "consumer_cyclical": 0.103999995,
+            "basic_materials": 0.015,
+            "consumer_defensive": 0.048499998,
+            "technology": 0.3529,
+            "communication_services": 0.109799996,
+            "financial_services": 0.1279,
+            "utilities": 0.023699999,
+            "industrials": 0.0734,
+            "energy": 0.028299998,
+            "healthcare": 0.09770001
+        }
+    },
+    "ZEQT.TO": {
+        "MER": 0,
+        "AUM": 526988096,
+        "Name": "BMO All-Equity ETF",
+        "Type": "Broad Equity",
+        "3Y": 0.2109101,
+        "5Y": null,
+        "yield": 0.0143,
+        "top_holdings": {
+            "ZSP": 0.4472419,
+            "ZCN": 0.2577652,
+            "ZEA": 0.1719295,
+            "ZEM": 0.086172,
+            "ZMID": 0.0250825,
+            "ZSML": 0.0116146
+        },
+        "sector_weights": {
+            "realestate": 0.0195,
+            "consumer_cyclical": 0.0881,
+            "basic_materials": 0.0704,
+            "consumer_defensive": 0.0463,
+            "technology": 0.2298,
+            "communication_services": 0.07,
+            "financial_services": 0.21180001,
+            "utilities": 0.026800001,
+            "industrials": 0.106800005,
+            "energy": 0.0612,
+            "healthcare": 0.069299996
+        }
+    },
+    "ZGLD.TO": {
+        "MER": 0,
+        "AUM": null,
+        "Name": "BMO Gold Bullion ETF (CAD Units)",
+        "Type": "Commodity",
+        "3Y": null,
+        "5Y": null,
+        "yield": 0.0,
+        "top_holdings": {},
+        "sector_weights": {}
+    },
+    "SPYM": {
+        "MER": 0,
+        "AUM": 106212876288,
+        "Name": "State Street SPDR Portfolio S&P 500 ETF",
+        "Type": "S&P 500",
+        "3Y": 0.22166911,
+        "5Y": 0.1426668,
+        "yield": 0.0112,
+        "top_holdings": {
+            "NVDA": 0.0782515,
+            "AAPL": 0.0645996,
+            "MSFT": 0.0538828,
+            "AMZN": 0.039222,
+            "GOOGL": 0.0331325,
+            "GOOG": 0.026522301,
+            "AVGO": 0.026359702,
+            "META": 0.026290601,
+            "TSLA": 0.020375399,
+            "BRK-B": 0.0148447
+        },
+        "sector_weights": {
+            "realestate": 0.0185,
+            "consumer_cyclical": 0.105900005,
+            "basic_materials": 0.0177,
+            "consumer_defensive": 0.05,
+            "technology": 0.3409,
+            "communication_services": 0.11229999,
+            "financial_services": 0.1265,
+            "utilities": 0.0225,
+            "industrials": 0.0795,
+            "energy": 0.0317,
+            "healthcare": 0.094399996
+        }
+    }
+}

@@ -1,4 +1,3 @@
-\
 import re 
 import os 
 import camelot
@@ -16,28 +15,26 @@ def clean_transactions(data: pd.DataFrame):
     2. Check what rows have missing data
     """
 
-    def confirm_data(data): 
+    def confirm_data(data):
         invalid_indexes = []
-
         required_cols = get_trans_req()
 
         for trans, cols in required_cols.items():
             subset = data.loc[data['transaction'].eq(trans)]
-
             missing_required = subset[cols].isna().any(axis=1)
-
             invalid_indexes.extend(subset.index[missing_required])
 
         invalid_rows = data.loc[invalid_indexes]
         logger.warning("Dropped rows containing invalid rows \n %s", invalid_rows)
         cleaned = data.drop(index=invalid_indexes).reset_index(drop=True)
+        return cleaned  # FIX 1: was missing return
 
     def remove_settlements(data):
         keywords = get_settlement_keywords()
         pattern = "|".join(re.escape(k) for k in keywords)
         filt = data.astype(str).apply(lambda col: col.str.contains(pattern))
-        data = data[~filt.any(axis=1)]
         result = data[filt.any(axis=1)]
+        data = data[~filt.any(axis=1)]
 
         logger.warning("Dropped rows due to keywords caught \n %s", result)
 
@@ -53,25 +50,30 @@ def clean_transactions(data: pd.DataFrame):
 
     data = remove_settlements(data)
     cleaned = confirm_data(data)
-
-    return data
-
+    return cleaned
 
 
 def merge_text(grp):
     return " ".join(grp.dropna().astype(str).str.strip())
+
 
 def transformations(df: pd.DataFrame):
     '''
     Handles all transformations related to the extracted wealthsimple PDF extraction
 
     returns  
-        extracted: pd.Dataframe - for the specfic file 
+        extracted: pd.Dataframe - for the specific file 
     '''
+
+    # FIX 2: normalize columns to integer RangeIndex before anything else,
+    # because pd.concat across multiple tables can scramble the column index
+    df.columns = range(len(df.columns))
+    df = df.reset_index(drop=True)
+    logger.debug("transformations() received df shape=%s columns=%s", df.shape, df.columns.tolist())
 
     def formatting(df: pd.DataFrame):
         '''
-        Handles basic formatting of the dataframe. Numbers sliced data rows to put together
+        Handles basic formatting of the dataframe. Renames last 3 cols and drops header row.
         '''
         cols = list(df.columns)
         non_crit_cols = [c for c in cols if c != "cont"]
@@ -90,7 +92,7 @@ def transformations(df: pd.DataFrame):
         """
         df = df.replace(r'^\s*$', pd.NA, regex=True)
 
-        df["cont"] = df[0].notna().cumsum()
+        df["cont"] = df[0].notna().cumsum()  # safe now — column 0 guaranteed by FIX 2
 
         agg_dict = {
             col: merge_text
@@ -141,35 +143,38 @@ def transformations(df: pd.DataFrame):
 
     return extracted
 
+
 def read_table(table):
     logger.info("Parsing Report %s", table.parsing_report)
     data = table.df
 
-    # Starting Data cleasing 
-    data = data.drop([0,1,2])
+    # Drop the camelot header rows
+    data = data.drop([0, 1, 2])
+
+    # FIX 3: reset both column names and row index after drop
+    data.columns = range(len(data.columns))
+    data = data.reset_index(drop=True)
 
     return data
-    
 
-def find_activity_pages(file: Path,  search= "Activity - Current period"):
+
+def find_activity_pages(file: Path, search="Activity - Current period"):
     """
     Uses PDFPlumber to find all pages that contain search word. 
     
     Return: 
-    matched_text: list[str]
+        matched_text: list[str]
     """
-
-    matched_text = [] 
+    matched_text = []
 
     with pdfplumber.open(file) as pdf:
-
         for i, page in enumerate(pdf.pages, start=1):
             text = page.extract_text() or ""
-
-            if search in text: 
+            if search in text:
                 matched_text.append(str(i))
 
     return matched_text
+
 
 def camelot_extraction_pipeline(file: Path):
 
@@ -179,34 +184,63 @@ def camelot_extraction_pipeline(file: Path):
     pages_list = find_activity_pages(file)
 
     # Checking if pages do not exist
-    if not pages_list: 
+    if not pages_list:
         logger.info("No pages found with Keyword on page(s) %s", file.name)
-        return matched_table
-    
-    # joining all pages together 
-    pages_concat = ",".join(pages_list)    
-    logger.info("Found %s pages that contain keyword on page(s) %s", len(pages_list), pages_concat)
+        return transactions  # FIX 4: return empty DataFrame, not empty list
 
-    # Find tables on all pages 
-    tables = camelot.read_pdf(file, pages=pages_concat, flavor='stream', columns=["78,126,444,478.5,517"]* len(pages_list))
-    logger.info("Reading WS File %s", file.name)
+    all_tables = []
 
-    for i, table in enumerate(tables):
+    for page in pages_list:
+        logger.info("Reading page %s from %s", page, file.name)
+
+        # First pass: find how many tables are on this page
+        tables = camelot.read_pdf(
+            str(file),
+            pages=str(page),
+            flavor="stream",
+        )
+        n_tables = len(tables)
+
+        # Second pass: supply one column spec per table found
+        tables = camelot.read_pdf(
+            str(file),
+            pages=str(page),
+            flavor="stream",
+            columns=["78,126,444,478.5,517"] * n_tables  # repeat for each table
+        )
+
+        all_tables.extend(tables)
+        logger.info("Found %s total table(s)", len(all_tables))
+
+    for i, table in enumerate(all_tables):
         df = table.df
-        # Find tables that contain Activity heading
         if df.astype(str).stack().str.contains("Activity - Current period", na=False).any():
             matched_table.append((i, table))
 
     logger.info("Kept %s table(s)", len(matched_table))
 
-    for id, table in matched_table: 
+    # FIX 6: guard against tables with unexpected column counts before concat
+    EXPECTED_COLS = 6  # camelot stream with 5 column splits produces 6 columns
+    for id, table in matched_table:
         x = read_table(table)
-        transactions = pd.concat([transactions,x], ignore_index=True)
-    
+        if len(x.columns) != EXPECTED_COLS:
+            logger.warning(
+                "Skipping table %s — unexpected column count: %s (expected %s)",
+                id, len(x.columns), EXPECTED_COLS
+            )
+            continue
+        logger.debug("Table %s shape: %s columns: %s", id, x.shape, x.columns.tolist())
+        transactions = pd.concat([transactions, x], ignore_index=True)
+
+    if transactions.empty:
+        logger.warning("No valid tables extracted from %s", file.name)
+        return transactions
+
     transactions = transformations(transactions)
-    transactions = transactions[["date", "transaction", "ticker_id", "quantity", "execDate", "fx_rate", "debit","credit","balance"]]
-    
+    transactions = transactions[["date", "transaction", "ticker_id", "quantity", "execDate", "fx_rate", "debit", "credit", "balance"]]
+
     final_df = clean_transactions(transactions)
+    print(final_df)
     return final_df
 
 # if __name__ == "__main__":

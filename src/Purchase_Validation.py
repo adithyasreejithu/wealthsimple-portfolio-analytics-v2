@@ -74,46 +74,100 @@ def parse_email_content(email:str, value: str, date) -> pd.DataFrame:
         return None
 
 
+# def email_handler(con):
+#     # variable to hold all transactions 
+#     ensemble = []
+
+#     # Getting last transaction uploaded
+#     last_date = get_last_date_stored_email(con)
+
+#     # Checking if value is not null
+#     if not last_date: 
+#         last_date = DEFAULT_DATE
+    
+#     # Formatting value    
+#     last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+
+#     # opening mailbox with context manager 
+#     with MailBox("imap.gmail.com").login(GMAIL,PASS,"Inbox") as mb:
+#         for msg in mb.fetch(
+#             AND(
+#                 OR(
+#                     AND(from_="support@wealthsimple.com"), # old email address 
+#                     AND(from_="notifications@o.wealthsimple.com") # new email address 
+#                 ),
+#                 date_gte= last_date
+#             )
+#         ):
+#             if "filled" in msg.subject: 
+#                 ensemble.append(parse_email_content(msg.text, None, None))
+#             elif "dividend" in msg.subject: 
+#                 received_date = msg.date.date()
+#                 ensemble.append(parse_email_content(msg.text, "Dividend", received_date))
+
+
+#     tdy_date = datetime.today().date()
+
+#     df = pd.concat(ensemble, ignore_index=True)
+#     row = df.shape[0]
+
+#     update_email_date(con, tdy_date, row )
+
+#     upload_email(df, con)
+
 def email_handler(con):
     # variable to hold all transactions 
     ensemble = []
 
+    logger.info("Starting email_handler")
+
     # Getting last transaction uploaded
     last_date = get_last_date_stored_email(con)
+    logger.debug("Last email date stored: %s", last_date)
 
     # Checking if value is not null
     if not last_date: 
+        logger.info("No last date found - using DEFAULT_DATE: %s", DEFAULT_DATE)
         last_date = DEFAULT_DATE
     
     # Formatting value    
     last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
 
     # opening mailbox with context manager 
-    with MailBox("imap.gmail.com").login(GMAIL,PASS,"Inbox") as mb:
+    logger.info("Connecting to mailbox and fetching emails since %s", last_date)
+    with MailBox("imap.gmail.com").login(GMAIL, PASS, "Inbox") as mb:
         for msg in mb.fetch(
             AND(
                 OR(
                     AND(from_="support@wealthsimple.com"), # old email address 
                     AND(from_="notifications@o.wealthsimple.com") # new email address 
                 ),
-                date_gte= last_date
+                date_gte=last_date
             )
         ):
             if "filled" in msg.subject: 
+                logger.debug("Parsing filled order email | Subject: %s | Date: %s", msg.subject, msg.date)
                 ensemble.append(parse_email_content(msg.text, None, None))
             elif "dividend" in msg.subject: 
                 received_date = msg.date.date()
+                logger.debug("Parsing dividend email | Subject: %s | Date: %s", msg.subject, received_date)
                 ensemble.append(parse_email_content(msg.text, "Dividend", received_date))
+            else:
+                logger.debug("Skipping email - no matching subject keyword | Subject: %s", msg.subject)
 
+    logger.info("Email fetch complete | %d emails parsed", len(ensemble))
 
     tdy_date = datetime.today().date()
 
     df = pd.concat(ensemble, ignore_index=True)
     row = df.shape[0]
+    logger.info("Transactions parsed from emails | Rows: %d", row)
 
-    update_email_date(con, tdy_date, row )
+    update_email_date(con, tdy_date, row)
+    logger.debug("Updated last email date to %s", tdy_date)
 
     upload_email(df, con)
+    logger.info("email_handler complete | %d transactions uploaded", row)
 
 
 

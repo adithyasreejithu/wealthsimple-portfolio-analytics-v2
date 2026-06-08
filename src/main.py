@@ -90,23 +90,29 @@ def main() -> None:
 
     try:
         with get_connection() as con:
-            # ocr_method(con)
             data = camelot_method()
             upload_transactions(data, con)
+    except Exception:
+        logger.exception("Transaction upload failed")
+    finally:
+        close_connection()
+        logger.info("Transaction process completed")
 
-            
+    try:
+        with get_connection() as con:
             hist_data = get_security_history(con)
             if hist_data is not None:
                 upload_history(hist_data, con)
             email_method(con)
-
+    except Exception:
+        logger.exception("Transaction upload failed")
     finally:
         close_connection()
         logger.info("Process completed")
-
-
+        
+            
 if __name__ == "__main__":
     main()
 
 # notes for fixes need to have a fix for when everuthing is empty
-# another issue to be fixed is the duplicate error stops the try catch and wont move forward
+# need to fix and catch stock history's that are failing 
