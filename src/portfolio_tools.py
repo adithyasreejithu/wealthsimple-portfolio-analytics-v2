@@ -13,7 +13,9 @@ from typing import Any
 
 import pandas as pd
 
-from portfolio_policy import get_bucket_for_ticker, group_holding
+from portfolio_policy import get_bucket_for_ticker, group_holding, normalize_ticker
+
+HOLDING_SOURCES = ("transactions", "email")
 
 
 def _connection_context(con=None, db_path: str | None = None):
@@ -37,14 +39,134 @@ def _records(df: pd.DataFrame) -> list[dict]:
     return df.where(pd.notnull(df), None).to_dict(orient="records")
 
 
-def get_current_holdings(con=None, db_path: str | None = None) -> list[dict]:
+def _table_exists(con, table_name: str) -> bool:
+    rows = con.execute("SHOW TABLES;").fetchall()
+    return table_name in {row[0] for row in rows}
+
+
+def _normalize_holding_source(source: str) -> str:
+    normalized = str(source).strip().lower()
+    if normalized not in HOLDING_SOURCES:
+        raise ValueError(
+            f"holding source must be one of {', '.join(HOLDING_SOURCES)}"
+        )
+    return normalized
+
+
+def _active_grouping_by_ticker(con) -> dict[str, dict]:
+    if not _table_exists(con, "portfolio_grouping_active"):
+        return {}
+
+    df = con.execute(
+        """
+        SELECT
+            ticker,
+            portfolio_group,
+            grouping_method,
+            grouping_status
+        FROM portfolio_grouping_active;
+        """
+    ).fetchdf()
+
+    if df.empty:
+        return {}
+
+    return {
+        normalize_ticker(row["ticker"]): row
+        for row in df.where(pd.notnull(df), None).to_dict(orient="records")
+    }
+
+
+def _grouping_for_row(row: dict, active_grouping: dict[str, dict]) -> dict:
+    stored_grouping = active_grouping.get(normalize_ticker(row.get("ticker")))
+    if stored_grouping:
+        return {
+            "portfolio_group": stored_grouping.get("portfolio_group"),
+            "grouping_method": stored_grouping.get("grouping_method"),
+            "grouping_status": stored_grouping.get("grouping_status"),
+        }
+
+    return group_holding(row)
+
+
+def _holding_totals_cte(source: str) -> str:
+    if source == "transactions":
+        return """
+        holding_totals AS (
+            SELECT
+                tr.ticker_id,
+                t.ticker_symbol,
+                SUM(COALESCE(tr.quantity, 0)) AS raw_total_quantity,
+                SUM(COALESCE(tr.quantity, 0)) FILTER (
+                    WHERE tr.transaction = 'BUY'
+                ) AS buy_quantity,
+                COUNT_IF(tr.transaction = 'BUY') AS buy_count,
+                SUM(COALESCE(tr.quantity, 0)) FILTER (
+                    WHERE tr.transaction = 'SELL'
+                ) AS sell_quantity,
+                COUNT_IF(tr.transaction = 'SELL') AS sell_count,
+                SUM(COALESCE(tr.debit, 0)) FILTER (
+                    WHERE tr.transaction = 'BUY'
+                ) AS total_buy_cost,
+                SUM(COALESCE(tr.credit, 0)) FILTER (
+                    WHERE tr.transaction = 'SELL'
+                ) AS total_sell_proceeds
+            FROM transactions tr
+            JOIN tickers t
+                ON tr.ticker_id = t.ticker_id
+            GROUP BY tr.ticker_id, t.ticker_symbol
+        )
+        """
+
+    return """
+        holding_totals AS (
+            SELECT
+                COALESCE(t.ticker_id, et.ticker_id) AS ticker_id,
+                COALESCE(t.ticker_symbol, et.ticker) AS ticker_symbol,
+                SUM(COALESCE(et.quantity, 0)) AS raw_total_quantity,
+                SUM(COALESCE(et.quantity, 0)) FILTER (
+                    WHERE et.transaction ILIKE '%buy%'
+                ) AS buy_quantity,
+                COUNT_IF(et.transaction ILIKE '%buy%') AS buy_count,
+                SUM(COALESCE(et.quantity, 0)) FILTER (
+                    WHERE et.transaction ILIKE '%sell%'
+                ) AS sell_quantity,
+                COUNT_IF(et.transaction ILIKE '%sell%') AS sell_count,
+                SUM(COALESCE(et.total_cost, et.debit, 0)) FILTER (
+                    WHERE et.transaction ILIKE '%buy%'
+                ) AS total_buy_cost,
+                SUM(COALESCE(et.total_cost, et.debit, 0)) FILTER (
+                    WHERE et.transaction ILIKE '%sell%'
+                ) AS total_sell_proceeds
+            FROM Email_Transactions et
+            LEFT JOIN tickers t
+                ON t.ticker_id = et.ticker_id
+                OR t.ticker_symbol = et.ticker
+            GROUP BY
+                COALESCE(t.ticker_id, et.ticker_id),
+                COALESCE(t.ticker_symbol, et.ticker)
+        )
+        """
+
+
+def get_current_holdings(
+    con=None,
+    db_path: str | None = None,
+    *,
+    source: str = "transactions",
+) -> list[dict]:
     """
     Return current security holdings with current price and market value.
 
-    Share ownership is based on BUY minus SELL transactions. Loan, recall, and
-    dividend rows do not change ownership.
+    Share ownership is based on BUY minus SELL rows from the selected source.
+    Loan, recall, and dividend rows do not change ownership.
     """
-    query = """
+    source = _normalize_holding_source(source)
+    with _connection_context(con, db_path) as active_con:
+        if source == "email" and not _table_exists(active_con, "Email_Transactions"):
+            raise ValueError("Email_Transactions table does not exist")
+
+        query = f"""
         WITH latest_prices AS (
             SELECT ticker_id, date AS latest_price_date, adj_close AS current_price
             FROM (
@@ -60,18 +182,9 @@ def get_current_holdings(con=None, db_path: str | None = None) -> list[dict]:
             )
             WHERE rn = 1
         ),
-        transaction_totals AS (
-            SELECT
-                ticker_id,
-                SUM(CASE WHEN transaction = 'BUY' THEN quantity ELSE 0 END) AS buy_quantity,
-                SUM(CASE WHEN transaction = 'SELL' THEN quantity ELSE 0 END) AS sell_quantity,
-                SUM(CASE WHEN transaction = 'BUY' THEN debit ELSE 0 END) AS total_buy_cost,
-                SUM(CASE WHEN transaction = 'SELL' THEN credit ELSE 0 END) AS total_sell_proceeds
-            FROM transactions
-            GROUP BY ticker_id
-        )
+        {_holding_totals_cte(source)}
         SELECT
-            t.ticker_symbol AS ticker,
+            COALESCE(t.ticker_symbol, ht.ticker_symbol) AS ticker,
             COALESCE(s.company_name, e.company_name) AS company_name,
             COALESCE(s.company_name, e.company_name) AS security_name,
             CASE
@@ -85,34 +198,42 @@ def get_current_holdings(con=None, db_path: str | None = None) -> list[dict]:
             s.exchange,
             e.asset AS etf_category,
             e.fund_family,
-            COALESCE(tt.buy_quantity, 0) - COALESCE(tt.sell_quantity, 0) AS quantity,
+            COALESCE(ht.buy_quantity, 0) - COALESCE(ht.sell_quantity, 0) AS quantity,
+            COALESCE(ht.raw_total_quantity, 0) AS raw_total_quantity,
             COALESCE(lp.current_price, 0) AS current_price,
             lp.latest_price_date,
-            COALESCE(tt.buy_quantity, 0) AS buy_quantity,
-            COALESCE(tt.sell_quantity, 0) AS sell_quantity,
-            COALESCE(tt.total_buy_cost, 0) AS total_buy_cost,
-            COALESCE(tt.total_sell_proceeds, 0) AS total_sell_proceeds
-        FROM transaction_totals tt
-        JOIN tickers t
-            ON t.ticker_id = tt.ticker_id
+            COALESCE(ht.buy_quantity, 0) AS buy_quantity,
+            COALESCE(ht.buy_count, 0) AS buy_count,
+            COALESCE(ht.sell_quantity, 0) AS sell_quantity,
+            COALESCE(ht.sell_count, 0) AS sell_count,
+            COALESCE(ht.total_buy_cost, 0) AS total_buy_cost,
+            COALESCE(ht.buy_quantity, 0) AS cost_basis_quantity,
+            COALESCE(ht.total_sell_proceeds, 0) AS total_sell_proceeds,
+            '{source}' AS source
+        FROM holding_totals ht
+        LEFT JOIN tickers t
+            ON t.ticker_id = ht.ticker_id
+            OR t.ticker_symbol = ht.ticker_symbol
         LEFT JOIN stocks s
             ON s.ticker_id = t.ticker_id
         LEFT JOIN etf e
             ON e.ticker_id = t.ticker_id
         LEFT JOIN latest_prices lp
             ON lp.ticker_id = t.ticker_id
-        WHERE COALESCE(tt.buy_quantity, 0) - COALESCE(tt.sell_quantity, 0) > 0
-        ORDER BY t.ticker_symbol;
+        WHERE COALESCE(ht.buy_quantity, 0) - COALESCE(ht.sell_quantity, 0) > 0
+        ORDER BY COALESCE(t.ticker_symbol, ht.ticker_symbol);
     """
-
-    with _connection_context(con, db_path) as active_con:
         df = active_con.execute(query).fetchdf()
+        active_grouping = _active_grouping_by_ticker(active_con)
 
     if df.empty:
         return []
 
     df["ticker"] = df["ticker"].astype(str)
-    grouped = df.apply(lambda row: group_holding(row.to_dict()), axis=1)
+    grouped = df.apply(
+        lambda row: _grouping_for_row(row.to_dict(), active_grouping),
+        axis=1,
+    )
     df["bucket"] = grouped.apply(lambda row: row["portfolio_group"])
     df["grouping_method"] = grouped.apply(lambda row: row["grouping_method"])
     df["grouping_status"] = grouped.apply(lambda row: row["grouping_status"])
@@ -121,8 +242,8 @@ def get_current_holdings(con=None, db_path: str | None = None) -> list[dict]:
     df["market_value"] = df["quantity"] * df["current_price"]
     df["average_cost"] = df.apply(
         lambda row: (
-            _safe_float(row["total_buy_cost"]) / _safe_float(row["buy_quantity"])
-            if _safe_float(row["buy_quantity"]) > 0
+            _safe_float(row["total_buy_cost"]) / _safe_float(row["cost_basis_quantity"])
+            if _safe_float(row["cost_basis_quantity"]) > 0
             else 0.0
         ),
         axis=1,
@@ -170,9 +291,10 @@ def get_portfolio_value(
     db_path: str | None = None,
     *,
     include_cash: bool = True,
+    source: str = "transactions",
 ) -> dict:
     """Return total portfolio value using current holdings and optional cash."""
-    holdings = get_current_holdings(con=con, db_path=db_path)
+    holdings = get_current_holdings(con=con, db_path=db_path, source=source)
     holdings_value = sum(_safe_float(row.get("market_value")) for row in holdings)
     cash = get_cash_available(con=con, db_path=db_path) if include_cash else {}
     cash_value = _safe_float(cash.get("cash_available")) if include_cash else 0.0
@@ -182,12 +304,18 @@ def get_portfolio_value(
         "holdings_value": holdings_value,
         "cash_value": cash_value,
         "include_cash": include_cash,
+        "source": _normalize_holding_source(source),
     }
 
 
-def get_allocation_by_ticker(con=None, db_path: str | None = None) -> dict:
+def get_allocation_by_ticker(
+    con=None,
+    db_path: str | None = None,
+    *,
+    source: str = "transactions",
+) -> dict:
     """Return current allocation weights by ticker."""
-    holdings = get_current_holdings(con=con, db_path=db_path)
+    holdings = get_current_holdings(con=con, db_path=db_path, source=source)
     total_value = sum(_safe_float(row.get("market_value")) for row in holdings)
 
     if total_value <= 0:
@@ -209,9 +337,10 @@ def get_allocation_by_bucket(
     db_path: str | None = None,
     *,
     include_cash: bool = True,
+    source: str = "transactions",
 ) -> dict:
     """Return current allocation weights by policy bucket."""
-    holdings = get_current_holdings(con=con, db_path=db_path)
+    holdings = get_current_holdings(con=con, db_path=db_path, source=source)
     bucket_values: dict[str, float] = {}
 
     for row in holdings:
@@ -244,10 +373,12 @@ def get_position_summary(
     ticker: str,
     con=None,
     db_path: str | None = None,
+    *,
+    source: str = "transactions",
 ) -> dict:
     """Return a single holding summary by ticker."""
     normalized = str(ticker).upper().replace(".TO", "").strip()
-    holdings = get_current_holdings(con=con, db_path=db_path)
+    holdings = get_current_holdings(con=con, db_path=db_path, source=source)
 
     for row in holdings:
         if str(row.get("ticker", "")).upper().replace(".TO", "") == normalized:
@@ -264,13 +395,19 @@ def get_position_summary(
     }
 
 
-def get_historical_values(con=None, db_path: str | None = None) -> list[dict]:
+def get_historical_values(
+    con=None,
+    db_path: str | None = None,
+    *,
+    source: str = "transactions",
+) -> list[dict]:
     """
     Return daily invested-portfolio values from stored price history.
 
     The result excludes cash because the current schema stores cash balances as
     transaction snapshots rather than a full daily cash history.
     """
+    source = _normalize_holding_source(source)
     transactions_query = """
         SELECT
             t.ticker_symbol AS ticker,
@@ -288,6 +425,24 @@ def get_historical_values(con=None, db_path: str | None = None) -> list[dict]:
         WHERE tr.transaction IN ('BUY', 'SELL')
         GROUP BY t.ticker_symbol, COALESCE(tr.execDate, tr.date);
     """
+    email_transactions_query = """
+        SELECT
+            COALESCE(t.ticker_symbol, et.ticker) AS ticker,
+            et.date,
+            SUM(
+                CASE
+                    WHEN et.transaction ILIKE '%buy%' THEN et.quantity
+                    WHEN et.transaction ILIKE '%sell%' THEN -et.quantity
+                    ELSE 0
+                END
+            ) AS signed_quantity
+        FROM Email_Transactions et
+        LEFT JOIN tickers t
+            ON t.ticker_id = et.ticker_id
+            OR t.ticker_symbol = et.ticker
+        WHERE et.transaction ILIKE '%buy%' OR et.transaction ILIKE '%sell%'
+        GROUP BY COALESCE(t.ticker_symbol, et.ticker), et.date;
+    """
     prices_query = """
         SELECT
             t.ticker_symbol AS ticker,
@@ -300,7 +455,15 @@ def get_historical_values(con=None, db_path: str | None = None) -> list[dict]:
     """
 
     with _connection_context(con, db_path) as active_con:
-        transactions = active_con.execute(transactions_query).fetchdf()
+        if source == "email" and not _table_exists(active_con, "Email_Transactions"):
+            raise ValueError("Email_Transactions table does not exist")
+
+        source_query = (
+            transactions_query
+            if source == "transactions"
+            else email_transactions_query
+        )
+        transactions = active_con.execute(source_query).fetchdf()
         prices = active_con.execute(prices_query).fetchdf()
 
     if transactions.empty or prices.empty:
