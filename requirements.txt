@@ -1,0 +1,6 @@
+pandas
+duckdb
+yfinance
+curl_cffi
+python-dotenv
+imap-tools
