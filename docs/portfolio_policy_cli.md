@@ -41,7 +41,7 @@ Use a specific database:
 Use a specific JSON export path:
 
 ```powershell
-.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py --export-path ref/active_policy.json
+.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py --export-path exports/active_policy.json
 ```
 
 Print and export without updating DuckDB:
@@ -98,13 +98,13 @@ used for both the pipeline and policy grouping:
 All-holdings mode exports to:
 
 ```text
-ref/active_policy.json
+exports/active_policy.json
 ```
 
 Single-ticker mode exports to a ticker-specific file by default:
 
 ```text
-ref/active_policy_AAPL.json
+exports/active_policy_AAPL.json
 ```
 
 Pass `--export-path` to override either default.

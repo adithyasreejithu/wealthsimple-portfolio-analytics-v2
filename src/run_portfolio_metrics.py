@@ -22,7 +22,7 @@ from portfolio_policy import ROOT_DIR, normalize_ticker
 from portfolio_tools import get_cash_available, get_current_holdings, get_historical_values
 
 
-METRICS_SUMMARY_PATH = ROOT_DIR / "ref" / "portfolio_metrics_summary.json"
+METRICS_SUMMARY_PATH = ROOT_DIR / "exports" / "portfolio_metrics_summary.json"
 
 
 @contextmanager
@@ -227,7 +227,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--export-path",
-        help="JSON export path. Defaults to ref/portfolio_metrics_summary.json or per-ticker JSON.",
+        help="JSON export path. Defaults to exports/portfolio_metrics_summary.json or per-ticker JSON.",
     )
     parser.add_argument(
         "--contribution-amount",

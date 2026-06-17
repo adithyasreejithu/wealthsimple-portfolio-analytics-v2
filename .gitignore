@@ -10,9 +10,17 @@ Data/WealthSimple.db
 Data/Data_Files/*
 !Data/Data_Files/.gitkeep
 
-ref/*
+ref/active_policy*.json
+ref/portfolio_metrics*.json
+!ref/.gitkeep
+!ref/*.drawio
 !ref/*.pdf
-!ref/ref/data_pipeline_reference.pdf
+!ref/*.png
+!ref/policy_v1.json
+!ref/security_grouping_reference_v1.json
+
+exports/*
+!exports/.gitkeep
 
 
 .env

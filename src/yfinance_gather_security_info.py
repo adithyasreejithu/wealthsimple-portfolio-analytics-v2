@@ -67,8 +67,7 @@ def get_info(ticker, session):
         }
 
     else:
-        print(f"Unknown security type for {ticker}: {secType}")
-        logger.info("Unknown security type for %s: %s", ticker, secType)
+        logger.warning("Unknown security type for %s: %s", ticker, secType)
 
     return etf_dict, stock_dict
 
@@ -87,8 +86,9 @@ def get_security_info(tickers:list):
 
         return etfs,stocks
    
-    except Exception as e:
-        print(f"Failed to fetch error: {e}")
+    except Exception:
+        logger.exception("Failed to fetch security info")
+        return {}, {}
 
 def get_security_history(con):
     """
@@ -106,6 +106,10 @@ def get_security_history(con):
     tickers_df = get_all_tickers(con)
     tickers = tickers_df["final_ticker"].dropna().unique().tolist()
     last_date = get_last_date_stored(con)
+
+    if not tickers:
+        logger.info("No tickers found for historical pull; skipping yfinance download")
+        return pd.DataFrame()
 
     logger.info("Last date pulled: %s", last_date)
 

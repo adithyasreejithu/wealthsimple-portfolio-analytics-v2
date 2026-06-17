@@ -53,6 +53,18 @@ class RunPortfolioPolicyTest(unittest.TestCase):
         self.assertEqual(len(active_grouping["holdings"]), 2)
         self.assertEqual(rows, [("AAPL", "Quality"), ("FAKE", "Income")])
 
+    def test_default_export_path_uses_exports_folder(self):
+        with patch("run_portfolio_policy.export_active_grouping") as export_mock:
+            active_grouping = run_policy_grouping(
+                holdings=self.holdings,
+                save_to_db=False,
+            )
+
+        export_path = Path(active_grouping["export_path"])
+        self.assertEqual(export_path.parent.name, "exports")
+        self.assertEqual(export_path.name, "active_policy.json")
+        export_mock.assert_called_once()
+
     def test_single_ticker_filters_case_insensitively(self):
         con = duckdb.connect(":memory:")
 

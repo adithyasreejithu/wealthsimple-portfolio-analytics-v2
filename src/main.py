@@ -1,4 +1,6 @@
 import argparse
+import json
+import sys
 from Database_Schema import initialize_database, get_connection, close_connection
 from Database_Upload import upload_transactions, upload_history
 from MonthlyReportExtract import check_data_files, extraction_pipline, move_read_file
@@ -10,9 +12,33 @@ from Purchase_Validation import email_handler
 from FormatFiles import rename_file
 from run_portfolio_metrics import format_metrics_output, run_portfolio_metrics
 from run_portfolio_policy import format_grouping_table, run_policy_grouping
+from run_current_holdings import (
+    _filter_holdings_by_ticker,
+    format_holdings_table,
+    get_current_holdings,
+)
+from portfolio_policy import normalize_ticker
 import pandas as pd
 
 logger = get_logger(__name__)
+
+
+def _log_table_counts(con, label: str) -> None:
+    tables = [
+        "tickers",
+        "transactions",
+        "cash_transactions",
+        "HistoricalRecords",
+        "Email_Transactions",
+        "EmailCheckDate",
+    ]
+    counts = {}
+    for table in tables:
+        try:
+            counts[table] = con.execute(f"SELECT COUNT(*) FROM {table};").fetchone()[0]
+        except Exception as exc:
+            counts[table] = f"unavailable: {exc}"
+    logger.info("%s table counts: %s", label, counts)
 
 
 def ocr_method(con) -> None:
@@ -45,30 +71,45 @@ def ocr_method(con) -> None:
 
 
 def process_pdf(file):
+    logger.info("Starting PDF extraction worker | file=%s", file)
     data = camelot_extraction_pipeline(file)
     move_read_file(file)
-    print(data)
+    logger.info(
+        "Finished PDF extraction worker | file=%s | rows=%d",
+        file,
+        0 if data is None else len(data),
+    )
     return data
 
 
 def camelot_method() -> pd.DataFrame:
+    """Extract new monthly statement PDFs and return one upload-ready frame."""
+    logger.info("Starting Camelot monthly statement extraction")
 
     rename_file()
 
     file_list = check_data_files()
 
-    if not file_list:                          # FIX 1: was returning on files found, not on empty
+    if not file_list:
         logger.info("No new files found")
         return
 
-    logger.info("New file(s) found: %s", len(file_list))
+    logger.info(
+        "New file(s) found: %s | files=%s",
+        len(file_list),
+        [file.name for file in file_list],
+    )
 
     with ProcessPoolExecutor() as executor:
-        results = list(executor.map(process_pdf, file_list))   # FIX 2: removed duplicate map call
-
-    print(results)
+        results = list(executor.map(process_pdf, file_list))
 
     valid = [r for r in results if r is not None and not r.empty]
+    logger.info(
+        "Camelot worker results collected | files=%d | valid_dataframes=%d | rows=%d",
+        len(results),
+        len(valid),
+        sum(len(df) for df in valid),
+    )
 
     if not valid:
         logger.warning("No valid results to upload")
@@ -82,8 +123,10 @@ def camelot_method() -> pd.DataFrame:
 
 
 def email_method(con) -> None:
-    """Placeholder for email-based transaction ingestion."""
+    """Run email-based transaction ingestion against the active connection."""
+    logger.info("Starting email transaction ingestion")
     email_handler(con)
+    logger.info("Email transaction ingestion complete")
 
 
 def _connection_for_path(db_path: str | None = None):
@@ -93,7 +136,8 @@ def _connection_for_path(db_path: str | None = None):
 
 
 def run_data_pipeline(db_path: str | None = None) -> None:
-    logger.info("Data pipeline initiated")
+    logger.info("%s", "=" * 96)
+    logger.info("Data pipeline initiated | db_path=%s", db_path or "default")
 
     if db_path is None:
         initialize_database()
@@ -102,30 +146,54 @@ def run_data_pipeline(db_path: str | None = None) -> None:
 
     try:
         with _connection_for_path(db_path) as con:
+            _log_table_counts(con, "Before monthly statement upload")
             data = camelot_method()
+            logger.info(
+                "Monthly statement extraction returned | rows=%d",
+                0 if data is None else len(data),
+            )
             upload_transactions(data, con)
+            _log_table_counts(con, "After monthly statement upload")
     except Exception:
-        logger.exception("Transaction upload failed")
+        logger.exception("Monthly statement transaction upload failed")
     finally:
         close_connection()
-        logger.info("Transaction process completed")
+        logger.info("Monthly statement transaction process completed")
 
     try:
         with _connection_for_path(db_path) as con:
+            _log_table_counts(con, "Before historical/email upload")
             hist_data = get_security_history(con)
+            logger.info(
+                "Historical data pull returned | rows=%d",
+                0 if hist_data is None else len(hist_data),
+            )
             if hist_data is not None:
                 upload_history(hist_data, con)
+                _log_table_counts(con, "After historical upload")
             email_method(con)
+            _log_table_counts(con, "After email upload")
     except Exception:
-        logger.exception("Transaction upload failed")
+        logger.exception("Historical or email transaction upload failed")
     finally:
         close_connection()
-        logger.info("Process completed")
+        logger.info("Data pipeline completed")
+        logger.info("%s", "=" * 96)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run the Wealthsimple portfolio data pipeline.",
+    )
+    parser.add_argument(
+        "--holdings",
+        action="store_true",
+        help="Show current holdings instead of running the data pipeline.",
+    )
+    parser.add_argument(
+        "--update-holdings",
+        action="store_true",
+        help="Run the data pipeline first, then show current holdings.",
     )
     parser.add_argument(
         "--policy",
@@ -150,13 +218,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--ticker",
         help=(
-            "Only run policy grouping or metrics for one ticker. Requires a "
-            "policy or metrics flag."
+            "Only run holdings, policy grouping, or metrics for one ticker. "
+            "Requires a holdings, policy, or metrics flag."
         ),
     )
     parser.add_argument(
         "--db-path",
-        help="DuckDB path to use for the pipeline and policy grouping.",
+        help="DuckDB path to use for the selected command.",
     )
     parser.add_argument(
         "--export-path",
@@ -177,7 +245,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--holding-source",
         choices=["transactions", "email"],
         default="transactions",
-        help="Holding source for metrics. Defaults to transactions.",
+        help="Holding source for holdings and metrics. Defaults to transactions.",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print current holdings as JSON. Requires --holdings or --update-holdings.",
     )
     return parser
 
@@ -185,7 +258,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    logger.info("CLI arguments parsed: %s", vars(args))
     mode_flags = [
+        args.holdings,
+        args.update_holdings,
         args.policy,
         args.update_policy,
         args.metrics,
@@ -194,14 +270,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if sum(1 for enabled in mode_flags if enabled) > 1:
         parser.error(
-            "Use only one of --policy, --update-policy, --metrics, or --update-metrics"
+            "Use only one of --holdings, --update-holdings, --policy, "
+            "--update-policy, --metrics, or --update-metrics"
         )
 
     if args.ticker and not any(mode_flags):
-        parser.error("--ticker requires a policy or metrics flag")
+        parser.error("--ticker requires a holdings, policy, or metrics flag")
 
-    if args.export_path and not any(mode_flags):
-        parser.error("--export-path requires a policy or metrics flag")
+    if args.export_path and not (
+        args.policy or args.update_policy or args.metrics or args.update_metrics
+    ):
+        parser.error("--export-path requires --policy, --update-policy, --metrics, or --update-metrics")
 
     if args.contribution_amount and not (args.metrics or args.update_metrics):
         parser.error("--contribution-amount requires --metrics or --update-metrics")
@@ -210,12 +289,44 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--no-export requires --metrics or --update-metrics")
 
     if args.holding_source != "transactions" and not (
-        args.metrics or args.update_metrics
+        args.holdings or args.update_holdings or args.metrics or args.update_metrics
     ):
-        parser.error("--holding-source requires --metrics or --update-metrics")
+        parser.error("--holding-source requires holdings or metrics mode")
 
-    if args.update_policy or args.update_metrics:
+    if args.json and not (args.holdings or args.update_holdings):
+        parser.error("--json requires --holdings or --update-holdings")
+
+    if args.update_holdings or args.update_policy or args.update_metrics:
         run_data_pipeline(db_path=args.db_path)
+
+    if args.holdings or args.update_holdings:
+        try:
+            holdings = get_current_holdings(
+                db_path=args.db_path,
+                source=args.holding_source,
+            )
+            if args.ticker:
+                holdings = _filter_holdings_by_ticker(holdings, args.ticker)
+                if not holdings:
+                    print(
+                        f"{normalize_ticker(args.ticker)} was not found in current holdings",
+                        file=sys.stderr,
+                    )
+                    return 1
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        except Exception as exc:
+            print(f"Current holdings failed: {exc}", file=sys.stderr)
+            return 1
+        finally:
+            close_connection()
+
+        if args.json:
+            print(json.dumps(holdings, indent=2, default=str))
+        else:
+            print(format_holdings_table(holdings))
+        return 0
 
     if args.policy or args.update_policy:
         try:
@@ -268,6 +379,3 @@ def main(argv: list[str] | None = None) -> int:
             
 if __name__ == "__main__":
     raise SystemExit(main())
-
-# notes for fixes need to have a fix for when everuthing is empty
-# need to fix and catch stock history's that are failing 

@@ -21,7 +21,7 @@ import pandas as pd
 ROOT_DIR = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT_DIR / "ref" / "policy_v1.json"
 GROUPING_REFERENCE_PATH = ROOT_DIR / "ref" / "security_grouping_reference_v1.json"
-ACTIVE_POLICY_PATH = ROOT_DIR / "ref" / "active_policy.json"
+ACTIVE_POLICY_PATH = ROOT_DIR / "exports" / "active_policy.json"
 
 DEFAULT_POLICY_VERSION = "v1.0"
 DEFAULT_GROUPING_REFERENCE_VERSION = "v1.0"
@@ -579,6 +579,7 @@ def save_active_grouping(
         if not df.empty:
             active_con.register("active_grouping_df", df)
             if not replace_all:
+                # Per-ticker policy runs refresh only the incoming tickers.
                 active_con.execute(
                     """
                     DELETE FROM portfolio_grouping_active

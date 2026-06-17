@@ -1,0 +1,65 @@
+{
+  "version": "v1.0",
+  "name": "policy_v1",
+  "groups": {
+    "Core": {
+      "description": "The foundation of the portfolio. Broadly diversified holdings designed to provide long-term market exposure, stability, and compounding.",
+      "objective": "Long-term wealth accumulation through diversification.",
+      "examples": [
+        "Broad market ETFs",
+        "Global equity ETFs",
+        "Country ETFs"
+      ]
+    },
+
+    "Income": {
+      "description": "Holdings focused on generating income through dividends or distributions while maintaining reasonable growth potential.",
+      "objective": "Provide income and dividend growth.",
+      "examples": [
+        "Dividend ETFs",
+        "REITs",
+        "High-quality dividend stocks"
+      ]
+    },
+
+    "Quality": {
+      "description": "Established businesses with durable competitive advantages, strong balance sheets, and proven operating histories.",
+      "objective": "Provide stability and reliable long-term growth.",
+      "examples": [
+        "Large-cap blue-chip companies",
+        "Industry leaders",
+        "Wide-moat businesses"
+      ]
+    },
+
+    "Growth": {
+      "description": "Companies or funds with above-average growth expectations and higher potential upside, typically accompanied by higher volatility.",
+      "objective": "Increase long-term portfolio growth.",
+      "examples": [
+        "Technology companies",
+        "Innovation-focused companies",
+        "Sector growth ETFs"
+      ]
+    },
+
+    "Alternatives": {
+      "description": "Assets that provide diversification away from traditional equities and income investments.",
+      "objective": "Reduce concentration risk and improve diversification.",
+      "examples": [
+        "Gold",
+        "Commodities",
+        "Alternative asset funds"
+      ]
+    },
+
+    "Cash": {
+      "description": "Uninvested capital available for future opportunities, liquidity needs, or portfolio rebalancing.",
+      "objective": "Maintain flexibility and liquidity.",
+      "examples": [
+        "Cash balances",
+        "Money market funds",
+        "Short-term treasury holdings"
+      ]
+    }
+  }
+}

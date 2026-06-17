@@ -42,6 +42,26 @@ Use email-derived transactions instead of statement transactions:
 .\.wsvenv\Scripts\python.exe src/run_portfolio_metrics.py --holding-source email
 ```
 
+## Metrics Included
+
+Portfolio summary metrics include:
+
+- Portfolio value, including current holdings and available cash.
+- Weights by ticker, with each holding's market value and portfolio weight.
+- Weights by bucket, including policy buckets and cash when available.
+- Allocation drift by bucket, comparing current weight to policy target weight.
+- Unrealized gains by ticker, including dollar gain and gain percentage.
+- Risk metrics: total return, annualized volatility, daily volatility, max drawdown, and Sharpe ratio.
+- Policy warnings for bucket limits and individual position limits.
+- Recommended contribution allocation when `--contribution-amount` is provided.
+
+Single-ticker metrics from `--ticker` include:
+
+- Position details, including bucket, grouping method, grouping status, quantity, current price, market value, and cost basis.
+- Portfolio weight for the selected ticker.
+- Unrealized dollar gain and unrealized gain percentage.
+- Position-limit warnings for the selected ticker.
+
 ## Run Through Main
 
 Run metrics only, using current database data:
@@ -79,13 +99,13 @@ Run the data pipeline first, then calculate metrics for one ticker:
 Portfolio summary exports to:
 
 ```text
-ref/portfolio_metrics_summary.json
+exports/portfolio_metrics_summary.json
 ```
 
 Single-ticker metrics export to a ticker-specific file:
 
 ```text
-ref/portfolio_metrics_AAPL.json
+exports/portfolio_metrics_AAPL.json
 ```
 
 Pass `--export-path` to override either default.

@@ -18,6 +18,7 @@ from portfolio_policy import (
     get_position_limit,
     get_primary_ticker_for_bucket,
     is_position_limit_exempt,
+    normalize_ticker,
 )
 from portfolio_tools import (
     get_cash_available,
@@ -51,13 +52,13 @@ def calculate_position_weight(
 ) -> dict:
     """Calculate the current portfolio weight for one ticker."""
     holdings = holdings if holdings is not None else get_current_holdings()
-    normalized = str(ticker).upper().replace(".TO", "").strip()
+    normalized = normalize_ticker(ticker)
     total_value = _safe_float(portfolio_value, _holdings_total(holdings))
     position = next(
         (
             row
             for row in holdings
-            if str(row.get("ticker", "")).upper().replace(".TO", "") == normalized
+            if normalize_ticker(row.get("ticker")) == normalized
         ),
         None,
     )

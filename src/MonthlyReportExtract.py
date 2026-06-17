@@ -113,7 +113,8 @@ def ocr_extract(page_num, file_path):
 #     return pd.DataFrame(data)
 
 def parse_transactions(text: str):
-    print(text)
+    logger.debug("OCR transaction parse candidate: %s", text)
+    return pd.DataFrame()
 
 
 

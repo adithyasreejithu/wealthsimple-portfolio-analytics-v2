@@ -55,6 +55,19 @@ class RunPortfolioMetricsTest(unittest.TestCase):
         self.assertIn("weights_by_ticker", metrics)
         self.assertIn("weights_by_bucket", metrics)
 
+    def test_default_export_path_uses_exports_folder(self):
+        with patch("run_portfolio_metrics.export_metrics") as export_mock:
+            metrics = run_portfolio_metrics(
+                holdings=self.holdings,
+                historical_values=self.history,
+                cash_value=50.0,
+            )
+
+        export_path = Path(metrics["export_path"])
+        self.assertEqual(export_path.parent.name, "exports")
+        self.assertEqual(export_path.name, "portfolio_metrics_summary.json")
+        export_mock.assert_called_once()
+
     def test_single_ticker_metrics_can_be_generated_case_insensitively(self):
         with patch("run_portfolio_metrics.export_metrics"):
             metrics = run_portfolio_metrics(

@@ -10,6 +10,58 @@ from yfinance_gather_security_info import get_security_info
 
 logger = get_logger(__name__)
 
+
+def _money_column_summary(df: pd.DataFrame) -> dict:
+   summary = {"rows": 0 if df is None else len(df)}
+   if df is None or df.empty:
+      return summary
+
+   for column in ("debit", "credit", "balance"):
+      if column not in df.columns:
+         continue
+
+      values = (
+         df[column]
+         .astype("string")
+         .str.replace(",", "", regex=False)
+         .str.replace("$", "", regex=False)
+         .str.strip()
+      )
+      present = values.notna() & values.ne("")
+      numeric = pd.to_numeric(values, errors="coerce")
+      summary[f"{column}_present"] = int(present.sum())
+      summary[f"{column}_missing"] = int((~present).sum())
+      summary[f"{column}_total"] = float(numeric.fillna(0).sum())
+
+   return summary
+
+
+def _transaction_type_summary(df: pd.DataFrame) -> dict:
+   if df is None or df.empty or "transaction" not in df.columns:
+      return {}
+   return df["transaction"].fillna("<missing>").value_counts().to_dict()
+
+
+def _log_upload_snapshot(stage: str, df: pd.DataFrame) -> None:
+   logger.info(
+      "%s | rows=%d | transaction_types=%s | money=%s",
+      stage,
+      0 if df is None else len(df),
+      _transaction_type_summary(df),
+      _money_column_summary(df),
+   )
+
+
+def _money_to_numeric(values: pd.Series) -> pd.Series:
+   cleaned = (
+      values
+      .astype("string")
+      .str.replace(",", "", regex=False)
+      .str.replace("$", "", regex=False)
+      .str.strip()
+   )
+   return pd.to_numeric(cleaned, errors="coerce")
+
 # def upload_yfinance_info(etfs, stocks, db):
 #    """
 #    Uploads etf and stock DataFrame 
@@ -257,7 +309,9 @@ def _normalize_transaction_columns(df: pd.DataFrame) -> pd.DataFrame:
       'ExecDate': 'execDate',
       'Debit': 'debit',
       'Credit': 'credit',
-      'FXRate': 'fxRate'
+      'FXRate': 'fxRate',
+      'Balance': 'balance',
+      'Symbol': 'ticker_symbol',
    })
 
    if 'ticker_symbol' not in df.columns and 'ticker_id' in df.columns:
@@ -279,10 +333,102 @@ def _clean_common_transaction_values(df: pd.DataFrame) -> pd.DataFrame:
    df = df.copy()
    df['date'] = pd.to_datetime(df['date'], errors='coerce')
    df['execDate'] = pd.to_datetime(df['execDate'], errors='coerce')
-   df['debit'] = pd.to_numeric(df['debit'], errors='coerce').fillna(0).round(2)
-   df['credit'] = pd.to_numeric(df['credit'], errors='coerce').fillna(0).round(2)
+   df['debit'] = _money_to_numeric(df['debit']).fillna(0).round(2)
+   df['credit'] = _money_to_numeric(df['credit']).fillna(0).round(2)
    df['fxRate'] = pd.to_numeric(df['fxRate'], errors='coerce').fillna(0).round(4)
    return df
+
+
+def _delete_replaced_zero_security_rows(db) -> int:
+   matching_rows = db.execute("""
+      SELECT COUNT(*)
+      FROM transactions AS existing
+      WHERE COALESCE(existing.debit, 0) = 0
+        AND COALESCE(existing.credit, 0) = 0
+        AND EXISTS (
+           SELECT 1
+           FROM transactions_df AS incoming
+           WHERE incoming.date = existing.date
+             AND incoming.transaction = existing.transaction
+             AND incoming.ticker_id = existing.ticker_id
+             AND incoming.quantity IS NOT DISTINCT FROM existing.quantity
+             AND incoming.execDate IS NOT DISTINCT FROM existing.execDate
+             AND incoming.fxRate IS NOT DISTINCT FROM existing.fxRate
+             AND (
+                COALESCE(incoming.debit, 0) <> 0
+                OR COALESCE(incoming.credit, 0) <> 0
+             )
+        );
+   """).fetchone()[0]
+
+   if matching_rows:
+      db.execute("""
+         DELETE FROM transactions AS existing
+         WHERE COALESCE(existing.debit, 0) = 0
+           AND COALESCE(existing.credit, 0) = 0
+           AND EXISTS (
+              SELECT 1
+              FROM transactions_df AS incoming
+              WHERE incoming.date = existing.date
+                AND incoming.transaction = existing.transaction
+                AND incoming.ticker_id = existing.ticker_id
+                AND incoming.quantity IS NOT DISTINCT FROM existing.quantity
+                AND incoming.execDate IS NOT DISTINCT FROM existing.execDate
+                AND incoming.fxRate IS NOT DISTINCT FROM existing.fxRate
+                AND (
+                   COALESCE(incoming.debit, 0) <> 0
+                   OR COALESCE(incoming.credit, 0) <> 0
+                )
+           );
+      """)
+
+   return matching_rows
+
+
+def _delete_replaced_zero_cash_rows(db) -> int:
+   matching_rows = db.execute("""
+      SELECT COUNT(*)
+      FROM cash_transactions AS existing
+      WHERE COALESCE(existing.debit, 0) = 0
+        AND COALESCE(existing.credit, 0) = 0
+        AND COALESCE(existing.balance, 0) = 0
+        AND EXISTS (
+           SELECT 1
+           FROM cash_transactions_df AS incoming
+           WHERE incoming.date = existing.date
+             AND incoming.transaction = existing.transaction
+             AND incoming.execDate IS NOT DISTINCT FROM existing.execDate
+             AND incoming.fxRate IS NOT DISTINCT FROM existing.fxRate
+             AND (
+                COALESCE(incoming.debit, 0) <> 0
+                OR COALESCE(incoming.credit, 0) <> 0
+                OR COALESCE(incoming.balance, 0) <> 0
+             )
+        );
+   """).fetchone()[0]
+
+   if matching_rows:
+      db.execute("""
+         DELETE FROM cash_transactions AS existing
+         WHERE COALESCE(existing.debit, 0) = 0
+           AND COALESCE(existing.credit, 0) = 0
+           AND COALESCE(existing.balance, 0) = 0
+           AND EXISTS (
+              SELECT 1
+              FROM cash_transactions_df AS incoming
+              WHERE incoming.date = existing.date
+                AND incoming.transaction = existing.transaction
+                AND incoming.execDate IS NOT DISTINCT FROM existing.execDate
+                AND incoming.fxRate IS NOT DISTINCT FROM existing.fxRate
+                AND (
+                   COALESCE(incoming.debit, 0) <> 0
+                   OR COALESCE(incoming.credit, 0) <> 0
+                   OR COALESCE(incoming.balance, 0) <> 0
+                )
+           );
+      """)
+
+   return matching_rows
 
 
 def _upload_security_transactions(df: pd.DataFrame, db):
@@ -290,7 +436,15 @@ def _upload_security_transactions(df: pd.DataFrame, db):
       logger.info("No security transactions to upload.")
       return 0, 0
 
+   _log_upload_snapshot("Security upload received", df)
+   original_rows = len(df)
    df = df[df['ticker_symbol'].notnull()].copy()
+   if len(df) != original_rows:
+      logger.warning(
+         "Dropped %d security rows with missing ticker symbols",
+         original_rows - len(df),
+      )
+
    if df.empty:
       logger.warning("No security transactions had ticker symbols after filtering.")
       return 0, 0
@@ -328,6 +482,7 @@ def _upload_security_transactions(df: pd.DataFrame, db):
 
    df = _clean_common_transaction_values(df)
    df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0).round(6)
+   _log_upload_snapshot("Security upload after numeric cleaning", df)
 
    null_ticker_ids = df['ticker_id'].isnull().sum()
    if null_ticker_ids:
@@ -335,7 +490,17 @@ def _upload_security_transactions(df: pd.DataFrame, db):
       df = df[df['ticker_id'].notnull()].copy()
 
    df = df[['date', 'transaction', 'ticker_id', 'quantity', 'execDate', 'debit', 'credit', 'fxRate']]
+   before_required_filter = len(df)
    df = df[df[['date', 'transaction', 'ticker_id']].notna().all(axis=1)].copy()
+   if len(df) != before_required_filter:
+      logger.warning(
+         "Dropped %d security rows missing date, transaction, or ticker_id before insert",
+         before_required_filter - len(df),
+      )
+
+   if df.empty:
+      logger.warning("No security rows remained after upload cleaning.")
+      return 0, 0
 
    dedupe_cols = [
       "date",
@@ -355,11 +520,18 @@ def _upload_security_transactions(df: pd.DataFrame, db):
       before_dedupe - len(df)
    )
 
+   _log_upload_snapshot("Security upload submitting to database", df)
+   db.register("transactions_df", df)
+   replaced_zero_rows = _delete_replaced_zero_security_rows(db)
+   if replaced_zero_rows:
+      logger.warning(
+         "Deleted %d previously zeroed security rows before corrected insert",
+         replaced_zero_rows,
+      )
    before = db.execute("""
       SELECT COUNT(*) FROM transactions;
    """).fetchone()[0]
 
-   db.register("transactions_df", df)
    db.execute("""
         INSERT INTO transactions (date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate)
         SELECT date, transaction, ticker_id, quantity, execDate, debit, credit, fxRate
@@ -371,6 +543,12 @@ def _upload_security_transactions(df: pd.DataFrame, db):
       SELECT COUNT(*) FROM transactions;
    """).fetchone()[0]
 
+   logger.info(
+      "Security DB insert complete | submitted=%d | inserted=%d | ignored=%d",
+      len(df),
+      after - before,
+      len(df) - (after - before),
+   )
    return len(df), after - before
 
 
@@ -379,11 +557,24 @@ def _upload_cash_transactions(df: pd.DataFrame, db):
       logger.info("No cash transactions to upload.")
       return 0, 0
 
+   _log_upload_snapshot("Cash upload received", df)
    df = _clean_common_transaction_values(df)
    df['execDate'] = df['execDate'].fillna(df['date'])
-   df['balance'] = pd.to_numeric(df['balance'], errors='coerce').round(2)
+   df['balance'] = _money_to_numeric(df['balance']).round(2)
+   _log_upload_snapshot("Cash upload after numeric cleaning", df)
+
    df = df[['date', 'transaction', 'execDate', 'debit', 'credit', 'fxRate', 'balance']]
+   before_required_filter = len(df)
    df = df[df[['date', 'transaction']].notna().all(axis=1)].copy()
+   if len(df) != before_required_filter:
+      logger.warning(
+         "Dropped %d cash rows missing date or transaction before insert",
+         before_required_filter - len(df),
+      )
+
+   if df.empty:
+      logger.warning("No cash rows remained after upload cleaning.")
+      return 0, 0
 
    dedupe_cols = [
       "date",
@@ -402,11 +593,18 @@ def _upload_cash_transactions(df: pd.DataFrame, db):
       before_dedupe - len(df)
    )
 
+   _log_upload_snapshot("Cash upload submitting to database", df)
+   db.register("cash_transactions_df", df)
+   replaced_zero_rows = _delete_replaced_zero_cash_rows(db)
+   if replaced_zero_rows:
+      logger.warning(
+         "Deleted %d previously zeroed cash rows before corrected insert",
+         replaced_zero_rows,
+      )
    before = db.execute("""
       SELECT COUNT(*) FROM cash_transactions;
    """).fetchone()[0]
 
-   db.register("cash_transactions_df", df)
    db.execute("""
         INSERT INTO cash_transactions (date, transaction, execDate, debit, credit, fxRate, balance)
         SELECT date, transaction, execDate, debit, credit, fxRate, balance
@@ -418,6 +616,12 @@ def _upload_cash_transactions(df: pd.DataFrame, db):
       SELECT COUNT(*) FROM cash_transactions;
    """).fetchone()[0]
 
+   logger.info(
+      "Cash DB insert complete | submitted=%d | inserted=%d | ignored=%d",
+      len(df),
+      after - before,
+      len(df) - (after - before),
+   )
    return len(df), after - before
 
 
@@ -439,6 +643,7 @@ def upload_transactions(df, db):
    logger.info("Starting upload_transactions | Shape: %s", df.shape)
 
    df = _normalize_transaction_columns(df)
+   _log_upload_snapshot("Normalized transaction upload input", df)
    security_types = get_security_transaction_types()
    cash_types = get_cash_transaction_types()
    known_types = security_types | cash_types
@@ -450,9 +655,19 @@ def upload_transactions(df, db):
          len(unknown_df),
          unknown_df['transaction'].dropna().unique().tolist()
       )
+      logger.debug(
+         "Unsupported transaction sample: %s",
+         unknown_df.head(5).to_dict(orient="records"),
+      )
 
    security_df = df.loc[df['transaction'].isin(security_types)].copy()
    cash_df = df.loc[df['transaction'].isin(cash_types)].copy()
+   logger.info(
+      "Classified transactions | security_rows=%d | cash_rows=%d | unsupported_rows=%d",
+      len(security_df),
+      len(cash_df),
+      len(unknown_df),
+   )
 
    security_submitted, security_inserted = _upload_security_transactions(security_df, db)
    cash_submitted, cash_inserted = _upload_cash_transactions(cash_df, db)
@@ -470,9 +685,16 @@ def upload_transactions(df, db):
    )
 
 def upload_history(history_df: pd.DataFrame, db):
-   # db = get_db_connnection()
+   if history_df is None or history_df.empty:
+      logger.info("No historical records to upload.")
+      return
+
+   logger.info(
+      "Starting upload_history | rows=%d | columns=%s",
+      len(history_df),
+      history_df.columns.tolist(),
+   )
    tick_map = get_ticker_table(db)
-   print(tick_map)
 
  
    history_df = history_df.rename(columns={
@@ -497,11 +719,25 @@ def upload_history(history_df: pd.DataFrame, db):
    )
 
    
+   before_required_filter = len(history_df)
    history_df = history_df[
       history_df[["date","ticker_id","adj_close","high","low","close","open","volume"]]
       .notna()
       .all(axis=1)
    ].copy()
+   if len(history_df) != before_required_filter:
+      logger.warning(
+         "Dropped %d historical rows missing required fields before insert",
+         before_required_filter - len(history_df),
+      )
+
+   if history_df.empty:
+      logger.warning("No historical rows remained after upload cleaning.")
+      return
+
+   before = db.execute("""
+      SELECT COUNT(*) FROM HistoricalRecords;
+   """).fetchone()[0]
 
    db.register('history_df', history_df)
    db.execute("""
@@ -509,10 +745,41 @@ def upload_history(history_df: pd.DataFrame, db):
       SELECT date, ticker_id, adj_close, high, low, close, open, volume
       FROM history_df;
    """)
+
+   after = db.execute("""
+      SELECT COUNT(*) FROM HistoricalRecords;
+   """).fetchone()[0]
+   logger.info(
+      "upload_history complete | submitted=%d | inserted=%d | ignored=%d",
+      len(history_df),
+      after - before,
+      len(history_df) - (after - before),
+   )
+
 def upload_email (emails_df : pd.DataFrame, db): 
+   if emails_df is None or emails_df.empty:
+      logger.info("No email transactions to upload.")
+      return
+
+   logger.info(
+      "Starting upload_email | rows=%d | transaction_types=%s | money=%s",
+      len(emails_df),
+      _transaction_type_summary(emails_df),
+      _money_column_summary(emails_df),
+   )
    
    tick_map = get_ticker_table(db)
    emails_df["ticker_id"] = emails_df["ticker"].map(tick_map.set_index("ticker_symbol")["ticker_id"])
+   missing_ticker_ids = emails_df["ticker_id"].isna().sum()
+   if missing_ticker_ids:
+      logger.warning(
+         "%d email transaction rows have unmapped ticker_ids and may be skipped by constraints",
+         missing_ticker_ids,
+      )
+
+   before = db.execute("""
+      SELECT COUNT(*) FROM Email_Transactions;
+   """).fetchone()[0]
    
    db.register('email_df', emails_df)
    db.execute("""
@@ -522,7 +789,18 @@ def upload_email (emails_df : pd.DataFrame, db):
       FROM email_df;
    """)
 
+   after = db.execute("""
+      SELECT COUNT(*) FROM Email_Transactions;
+   """).fetchone()[0]
+   logger.info(
+      "upload_email complete | submitted=%d | inserted=%d | ignored=%d",
+      len(emails_df),
+      after - before,
+      len(emails_df) - (after - before),
+   )
+
 def update_email_date(con, email_Date, count):
+    logger.info("Updating email check date | date=%s | count=%s", email_Date, count)
     con.execute(
         """
         INSERT OR IGNORE INTO EmailCheckDate (date, num_emails)

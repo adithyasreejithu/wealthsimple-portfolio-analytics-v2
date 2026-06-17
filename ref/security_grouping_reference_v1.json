@@ -1,0 +1,734 @@
+{
+  "version": "v1.0",
+  "name": "security_grouping_reference_v1",
+  "description": "Reference dictionary for portfolio grouping. Uses standard equity sector/industry labels and ETF classification attributes to support rule-based grouping into portfolio roles.",
+  "source_notes": {
+    "equity_taxonomy_basis": "GICS-style 11-sector equity taxonomy. This file is a practical project reference, not an official licensed taxonomy.",
+    "portfolio_groups_supported": [
+      "Core",
+      "Income",
+      "Quality",
+      "Growth",
+      "Alternatives",
+      "Cash"
+    ],
+    "usage": "Use this file as a reference for grouping securities based on metadata already stored in the database. Do not store this descriptive reference content redundantly in DuckDB runtime tables."
+  },
+  "equity_sectors": {
+    "Energy": {
+      "sector_aliases": [
+        "Energy",
+        "Oil & Gas",
+        "Oil Gas & Consumable Fuels"
+      ],
+      "default_group_bias": [
+        "Income",
+        "Quality"
+      ],
+      "industry_groups": {
+        "Energy Equipment & Services": {
+          "industries": [
+            "Oil & Gas Drilling",
+            "Oil & Gas Equipment & Services"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Growth"
+          ]
+        },
+        "Oil, Gas & Consumable Fuels": {
+          "industries": [
+            "Integrated Oil & Gas",
+            "Oil & Gas Exploration & Production",
+            "Oil & Gas Refining & Marketing",
+            "Oil & Gas Storage & Transportation",
+            "Coal & Consumable Fuels"
+          ],
+          "default_group_bias": [
+            "Income",
+            "Quality"
+          ]
+        }
+      }
+    },
+    "Materials": {
+      "sector_aliases": [
+        "Materials",
+        "Basic Materials"
+      ],
+      "default_group_bias": [
+        "Alternatives",
+        "Quality"
+      ],
+      "industry_groups": {
+        "Materials": {
+          "industries": [
+            "Chemicals",
+            "Construction Materials",
+            "Containers & Packaging",
+            "Metals & Mining",
+            "Paper & Forest Products"
+          ],
+          "sub_industries": [
+            "Commodity Chemicals",
+            "Diversified Chemicals",
+            "Fertilizers & Agricultural Chemicals",
+            "Industrial Gases",
+            "Specialty Chemicals",
+            "Construction Materials",
+            "Metal, Glass & Plastic Containers",
+            "Paper & Plastic Packaging Products & Materials",
+            "Aluminum",
+            "Diversified Metals & Mining",
+            "Copper",
+            "Gold",
+            "Precious Metals & Minerals",
+            "Silver",
+            "Steel",
+            "Forest Products",
+            "Paper Products"
+          ],
+          "default_group_bias": [
+            "Alternatives",
+            "Quality"
+          ]
+        }
+      }
+    },
+    "Industrials": {
+      "sector_aliases": [
+        "Industrials",
+        "Industrial"
+      ],
+      "default_group_bias": [
+        "Quality",
+        "Growth"
+      ],
+      "industry_groups": {
+        "Capital Goods": {
+          "industries": [
+            "Aerospace & Defense",
+            "Building Products",
+            "Construction & Engineering",
+            "Electrical Equipment",
+            "Industrial Conglomerates",
+            "Machinery",
+            "Trading Companies & Distributors"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Growth"
+          ]
+        },
+        "Commercial & Professional Services": {
+          "industries": [
+            "Commercial Services & Supplies",
+            "Professional Services"
+          ],
+          "default_group_bias": [
+            "Quality"
+          ]
+        },
+        "Transportation": {
+          "industries": [
+            "Air Freight & Logistics",
+            "Passenger Airlines",
+            "Marine Transportation",
+            "Ground Transportation",
+            "Transportation Infrastructure"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Growth"
+          ]
+        }
+      }
+    },
+    "Consumer Discretionary": {
+      "sector_aliases": [
+        "Consumer Discretionary",
+        "Consumer Cyclical",
+        "Cyclical Consumer"
+      ],
+      "default_group_bias": [
+        "Growth",
+        "Quality"
+      ],
+      "industry_groups": {
+        "Automobiles & Components": {
+          "industries": [
+            "Automobile Components",
+            "Automobiles"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        },
+        "Consumer Durables & Apparel": {
+          "industries": [
+            "Household Durables",
+            "Leisure Products",
+            "Textiles, Apparel & Luxury Goods"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        },
+        "Consumer Services": {
+          "industries": [
+            "Hotels, Restaurants & Leisure",
+            "Diversified Consumer Services"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        },
+        "Consumer Discretionary Distribution & Retail": {
+          "industries": [
+            "Distributors",
+            "Broadline Retail",
+            "Specialty Retail"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        }
+      }
+    },
+    "Consumer Staples": {
+      "sector_aliases": [
+        "Consumer Staples",
+        "Consumer Defensive",
+        "Defensive Consumer"
+      ],
+      "default_group_bias": [
+        "Quality",
+        "Income"
+      ],
+      "industry_groups": {
+        "Consumer Staples Distribution & Retail": {
+          "industries": [
+            "Consumer Staples Merchandise Retail",
+            "Food Distributors"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Income"
+          ]
+        },
+        "Food, Beverage & Tobacco": {
+          "industries": [
+            "Beverages",
+            "Food Products",
+            "Tobacco"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Income"
+          ]
+        },
+        "Household & Personal Products": {
+          "industries": [
+            "Household Products",
+            "Personal Care Products"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Income"
+          ]
+        }
+      }
+    },
+    "Health Care": {
+      "sector_aliases": [
+        "Health Care",
+        "Healthcare"
+      ],
+      "default_group_bias": [
+        "Quality",
+        "Growth"
+      ],
+      "industry_groups": {
+        "Health Care Equipment & Services": {
+          "industries": [
+            "Health Care Equipment & Supplies",
+            "Health Care Providers & Services",
+            "Health Care Technology"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Growth"
+          ]
+        },
+        "Pharmaceuticals, Biotechnology & Life Sciences": {
+          "industries": [
+            "Biotechnology",
+            "Pharmaceuticals",
+            "Life Sciences Tools & Services"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        }
+      }
+    },
+    "Financials": {
+      "sector_aliases": [
+        "Financials",
+        "Financial Services"
+      ],
+      "default_group_bias": [
+        "Income",
+        "Quality"
+      ],
+      "industry_groups": {
+        "Banks": {
+          "industries": [
+            "Banks",
+            "Thrifts & Mortgage Finance"
+          ],
+          "default_group_bias": [
+            "Income",
+            "Quality"
+          ]
+        },
+        "Financial Services": {
+          "industries": [
+            "Financial Services",
+            "Consumer Finance",
+            "Capital Markets",
+            "Mortgage Real Estate Investment Trusts"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Income"
+          ]
+        },
+        "Insurance": {
+          "industries": [
+            "Insurance"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Income"
+          ]
+        }
+      }
+    },
+    "Information Technology": {
+      "sector_aliases": [
+        "Information Technology",
+        "Technology",
+        "Tech"
+      ],
+      "default_group_bias": [
+        "Growth",
+        "Quality"
+      ],
+      "industry_groups": {
+        "Software & Services": {
+          "industries": [
+            "IT Services",
+            "Software"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        },
+        "Technology Hardware & Equipment": {
+          "industries": [
+            "Communications Equipment",
+            "Technology Hardware, Storage & Peripherals",
+            "Electronic Equipment, Instruments & Components"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Growth"
+          ]
+        },
+        "Semiconductors & Semiconductor Equipment": {
+          "industries": [
+            "Semiconductors & Semiconductor Equipment"
+          ],
+          "default_group_bias": [
+            "Growth"
+          ]
+        }
+      }
+    },
+    "Communication Services": {
+      "sector_aliases": [
+        "Communication Services",
+        "Communications",
+        "Telecommunications"
+      ],
+      "default_group_bias": [
+        "Quality",
+        "Growth",
+        "Income"
+      ],
+      "industry_groups": {
+        "Telecommunication Services": {
+          "industries": [
+            "Diversified Telecommunication Services",
+            "Wireless Telecommunication Services"
+          ],
+          "default_group_bias": [
+            "Income",
+            "Quality"
+          ]
+        },
+        "Media & Entertainment": {
+          "industries": [
+            "Media",
+            "Entertainment",
+            "Interactive Media & Services"
+          ],
+          "default_group_bias": [
+            "Growth",
+            "Quality"
+          ]
+        }
+      }
+    },
+    "Utilities": {
+      "sector_aliases": [
+        "Utilities"
+      ],
+      "default_group_bias": [
+        "Income",
+        "Quality"
+      ],
+      "industry_groups": {
+        "Utilities": {
+          "industries": [
+            "Electric Utilities",
+            "Gas Utilities",
+            "Multi-Utilities",
+            "Water Utilities",
+            "Independent Power and Renewable Electricity Producers"
+          ],
+          "default_group_bias": [
+            "Income",
+            "Quality"
+          ]
+        }
+      }
+    },
+    "Real Estate": {
+      "sector_aliases": [
+        "Real Estate",
+        "REITs"
+      ],
+      "default_group_bias": [
+        "Income",
+        "Alternatives"
+      ],
+      "industry_groups": {
+        "Equity Real Estate Investment Trusts": {
+          "industries": [
+            "Diversified REITs",
+            "Industrial REITs",
+            "Hotel & Resort REITs",
+            "Office REITs",
+            "Health Care REITs",
+            "Residential REITs",
+            "Retail REITs",
+            "Specialized REITs"
+          ],
+          "default_group_bias": [
+            "Income",
+            "Alternatives"
+          ]
+        },
+        "Real Estate Management & Development": {
+          "industries": [
+            "Real Estate Management & Development"
+          ],
+          "default_group_bias": [
+            "Quality",
+            "Alternatives"
+          ]
+        }
+      }
+    }
+  },
+  "etf_reference": {
+    "description": "ETF grouping reference. ETFs should be grouped using ETF name, ticker, objective, asset class, region, style, and holdings data if available.",
+    "asset_classes": {
+      "Broad Equity": {
+        "keywords": [
+          "total market",
+          "all equity",
+          "core equity",
+          "global equity",
+          "world equity",
+          "s&p 500",
+          "tsx",
+          "msci world"
+        ],
+        "default_group_bias": [
+          "Core"
+        ]
+      },
+      "Dividend Equity": {
+        "keywords": [
+          "dividend",
+          "dividend growth",
+          "high dividend",
+          "aristocrats",
+          "income equity"
+        ],
+        "default_group_bias": [
+          "Income"
+        ]
+      },
+      "Quality Equity": {
+        "keywords": [
+          "quality",
+          "moat",
+          "blue chip",
+          "large cap",
+          "minimum volatility",
+          "low volatility"
+        ],
+        "default_group_bias": [
+          "Quality"
+        ]
+      },
+      "Growth Equity": {
+        "keywords": [
+          "growth",
+          "innovation",
+          "technology",
+          "nasdaq",
+          "software",
+          "ai",
+          "semiconductor",
+          "cloud",
+          "digital"
+        ],
+        "default_group_bias": [
+          "Growth"
+        ]
+      },
+      "Sector Equity": {
+        "keywords": [
+          "sector",
+          "banks",
+          "financials",
+          "energy",
+          "utilities",
+          "healthcare",
+          "industrials",
+          "technology",
+          "semiconductor"
+        ],
+        "default_group_bias": [
+          "Growth",
+          "Quality",
+          "Income"
+        ]
+      },
+      "Country or Regional Equity": {
+        "keywords": [
+          "canada",
+          "u.s.",
+          "usa",
+          "international",
+          "emerging markets",
+          "india",
+          "china",
+          "europe",
+          "japan"
+        ],
+        "default_group_bias": [
+          "Core",
+          "Growth"
+        ]
+      },
+      "Bond or Fixed Income": {
+        "keywords": [
+          "bond",
+          "aggregate bond",
+          "treasury",
+          "corporate bond",
+          "fixed income",
+          "short term bond"
+        ],
+        "default_group_bias": [
+          "Income",
+          "Cash"
+        ]
+      },
+      "Cash or Money Market": {
+        "keywords": [
+          "cash",
+          "money market",
+          "savings",
+          "t-bill",
+          "treasury bill",
+          "ultra short"
+        ],
+        "default_group_bias": [
+          "Cash"
+        ]
+      },
+      "Commodity or Precious Metal": {
+        "keywords": [
+          "gold",
+          "silver",
+          "commodity",
+          "bullion",
+          "precious metal",
+          "oil",
+          "natural gas"
+        ],
+        "default_group_bias": [
+          "Alternatives"
+        ]
+      },
+      "Real Estate": {
+        "keywords": [
+          "reit",
+          "real estate"
+        ],
+        "default_group_bias": [
+          "Income",
+          "Alternatives"
+        ]
+      },
+      "Multi-Asset": {
+        "keywords": [
+          "balanced",
+          "asset allocation",
+          "conservative",
+          "growth portfolio",
+          "income portfolio"
+        ],
+        "default_group_bias": [
+          "Core",
+          "Income"
+        ]
+      }
+    },
+    "grouping_priority_for_etfs": [
+      "explicit ETF objective/name match",
+      "asset class match",
+      "style/theme match",
+      "sector/industry match",
+      "top holdings analysis if available",
+      "manual review if unresolved"
+    ]
+  },
+  "portfolio_group_reference": {
+    "Core": {
+      "role_description": "Broad diversified foundation for long-term market exposure and compounding.",
+      "security_patterns": [
+        "broad market ETF",
+        "global equity ETF",
+        "total market ETF",
+        "multi-asset allocation ETF"
+      ],
+      "sector_bias": "diversified across many sectors"
+    },
+    "Income": {
+      "role_description": "Dividend, distribution, or yield-focused holdings.",
+      "security_patterns": [
+        "dividend ETF",
+        "dividend stock",
+        "bond ETF",
+        "REIT",
+        "income ETF"
+      ],
+      "sector_bias": [
+        "Financials",
+        "Utilities",
+        "Energy",
+        "Real Estate",
+        "Consumer Staples",
+        "Communication Services"
+      ]
+    },
+    "Quality": {
+      "role_description": "Established companies with durable business models and lower relative uncertainty than speculative growth holdings.",
+      "security_patterns": [
+        "large cap leader",
+        "blue chip",
+        "defensive business",
+        "quality ETF"
+      ],
+      "sector_bias": [
+        "Consumer Staples",
+        "Financials",
+        "Industrials",
+        "Health Care",
+        "Information Technology",
+        "Communication Services"
+      ]
+    },
+    "Growth": {
+      "role_description": "Higher-growth companies, sector ETFs, or innovation themes with higher volatility.",
+      "security_patterns": [
+        "growth stock",
+        "technology ETF",
+        "semiconductor ETF",
+        "innovation ETF",
+        "cloud/software theme"
+      ],
+      "sector_bias": [
+        "Information Technology",
+        "Consumer Discretionary",
+        "Communication Services",
+        "Health Care",
+        "Industrials"
+      ]
+    },
+    "Alternatives": {
+      "role_description": "Diversifiers outside traditional equities and income holdings.",
+      "security_patterns": [
+        "gold ETF",
+        "commodity ETF",
+        "precious metals",
+        "alternative asset"
+      ],
+      "sector_bias": [
+        "Materials",
+        "Real Estate"
+      ]
+    },
+    "Cash": {
+      "role_description": "Uninvested capital or very short-duration cash-like holdings.",
+      "security_patterns": [
+        "cash",
+        "money market",
+        "t-bill ETF",
+        "high interest savings ETF"
+      ],
+      "sector_bias": []
+    }
+  },
+  "database_storage_guidance": {
+    "store_in_duckdb": [
+      "ticker",
+      "portfolio_group",
+      "grouping_method",
+      "grouping_status",
+      "generated_at",
+      "source_reference_version"
+    ],
+    "do_not_duplicate_in_duckdb": [
+      "role_description",
+      "sector descriptions",
+      "industry lists",
+      "ETF keyword lists",
+      "long explanations"
+    ]
+  }
+}

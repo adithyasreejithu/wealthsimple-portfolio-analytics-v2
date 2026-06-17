@@ -80,6 +80,7 @@ def _active_grouping_by_ticker(con) -> dict[str, dict]:
 def _grouping_for_row(row: dict, active_grouping: dict[str, dict]) -> dict:
     stored_grouping = active_grouping.get(normalize_ticker(row.get("ticker")))
     if stored_grouping:
+        # The persisted policy run is authoritative until the user regenerates it.
         return {
             "portfolio_group": stored_grouping.get("portfolio_group"),
             "grouping_method": stored_grouping.get("grouping_method"),
@@ -377,11 +378,11 @@ def get_position_summary(
     source: str = "transactions",
 ) -> dict:
     """Return a single holding summary by ticker."""
-    normalized = str(ticker).upper().replace(".TO", "").strip()
+    normalized = normalize_ticker(ticker)
     holdings = get_current_holdings(con=con, db_path=db_path, source=source)
 
     for row in holdings:
-        if str(row.get("ticker", "")).upper().replace(".TO", "") == normalized:
+        if normalize_ticker(row.get("ticker")) == normalized:
             return row
 
     return {

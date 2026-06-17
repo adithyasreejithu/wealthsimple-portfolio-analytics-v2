@@ -1,5 +1,6 @@
 import re 
 import os 
+import logging
 import camelot
 import pdfplumber 
 import pandas as pd
@@ -9,11 +10,77 @@ from system_logger import get_logger
 
 logger = get_logger(__name__)
 
+
+MONEY_COLUMNS = ["debit", "credit", "balance"]
+
+
+def _money_series(data: pd.DataFrame, column: str) -> pd.Series:
+    if column not in data.columns:
+        return pd.Series(dtype="float64")
+    cleaned = (
+        data[column]
+        .astype("string")
+        .str.replace(",", "", regex=False)
+        .str.replace("$", "", regex=False)
+        .str.strip()
+    )
+    return pd.to_numeric(cleaned, errors="coerce")
+
+
+def _has_text_value(data: pd.DataFrame, column: str) -> pd.Series:
+    if column not in data.columns:
+        return pd.Series(False, index=data.index)
+    values = data[column].astype("string").str.strip()
+    return values.notna() & values.ne("")
+
+
+def _money_summary(data: pd.DataFrame) -> dict:
+    summary = {"rows": len(data)}
+    for column in MONEY_COLUMNS:
+        values = _money_series(data, column)
+        present = _has_text_value(data, column)
+        summary[f"{column}_present"] = int(present.sum())
+        summary[f"{column}_missing"] = int((~present).sum())
+        summary[f"{column}_total"] = float(values.fillna(0).sum())
+    return summary
+
+
+def _log_money_summary(stage: str, data: pd.DataFrame, level: int = None) -> None:
+    log_level = level if level is not None else logger.level
+    logger.log(log_level, "%s money summary: %s", stage, _money_summary(data))
+
+
+def _missing_value_mask(values: pd.Series) -> pd.Series:
+    text_values = values.astype("string").str.strip()
+    return values.isna() | text_values.isna() | text_values.eq("")
+
+
+def _fill_missing_dividend_exec_dates(data: pd.DataFrame) -> pd.DataFrame:
+    if not {"transaction", "execDate", "date"}.issubset(data.columns):
+        return data
+
+    data = data.copy()
+    transaction_type = data["transaction"].astype("string").str.strip().str.upper()
+    missing_exec_date = _missing_value_mask(data["execDate"])
+    fill_mask = transaction_type.eq("DIV") & missing_exec_date & ~_missing_value_mask(data["date"])
+
+    if fill_mask.any():
+        data.loc[fill_mask, "execDate"] = data.loc[fill_mask, "date"]
+        logger.info(
+            "Filled missing dividend execDate values from date | rows=%d",
+            int(fill_mask.sum()),
+        )
+
+    return data
+
+
 def clean_transactions(data: pd.DataFrame):
     """
     1. Remove Transactions for Future Settlement
     2. Check what rows have missing data
     """
+    logger.info("Starting transaction cleaning | rows=%d", len(data))
+    _log_money_summary("Before cleaning", data, logging.INFO)
 
     def confirm_data(data):
         invalid_indexes = []
@@ -21,11 +88,21 @@ def clean_transactions(data: pd.DataFrame):
 
         for trans, cols in required_cols.items():
             subset = data.loc[data['transaction'].eq(trans)]
-            missing_required = subset[cols].isna().any(axis=1)
+            missing_required = pd.Series(False, index=subset.index)
+            for col in cols:
+                if col not in subset.columns:
+                    missing_required = pd.Series(True, index=subset.index)
+                    break
+                missing_required = missing_required | _missing_value_mask(subset[col])
             invalid_indexes.extend(subset.index[missing_required])
 
         invalid_rows = data.loc[invalid_indexes]
-        logger.warning("Dropped rows containing invalid rows \n %s", invalid_rows)
+        if not invalid_rows.empty:
+            logger.warning(
+                "Dropped %d rows missing required fields | sample=%s",
+                len(invalid_rows),
+                invalid_rows.head(5).to_dict(orient="records"),
+            )
         cleaned = data.drop(index=invalid_indexes).reset_index(drop=True)
         return cleaned  # FIX 1: was missing return
 
@@ -36,20 +113,33 @@ def clean_transactions(data: pd.DataFrame):
         result = data[filt.any(axis=1)]
         data = data[~filt.any(axis=1)]
 
-        logger.warning("Dropped rows due to keywords caught \n %s", result)
+        if not result.empty:
+            logger.warning(
+                "Dropped %d settlement/header rows due to keyword match | sample=%s",
+                len(result),
+                result.head(5).to_dict(orient="records"),
+            )
 
-        # Future settlements do not have a debit column 
-        filt2 = data["debit"] != ""
-        kept = data[filt2]
-        dropped = data[~filt2]
+        has_money_value = pd.Series(False, index=data.index)
+        for column in MONEY_COLUMNS:
+            has_money_value = has_money_value | _has_text_value(data, column)
 
+        kept = data[has_money_value]
+        dropped = data[~has_money_value]
         if not dropped.empty:
-            logger.warning("Dropped rows contain future settlement criteria \n %s", dropped)
+            logger.warning(
+                "Dropped %d rows with no debit, credit, or balance values | sample=%s",
+                len(dropped),
+                dropped.head(5).to_dict(orient="records"),
+            )
 
         return kept
 
+    data = _fill_missing_dividend_exec_dates(data)
     data = remove_settlements(data)
     cleaned = confirm_data(data)
+    logger.info("Transaction cleaning complete | rows=%d", len(cleaned))
+    _log_money_summary("After cleaning", cleaned, logging.INFO)
     return cleaned
 
 
@@ -134,6 +224,13 @@ def transformations(df: pd.DataFrame):
         df["ticker_id"] = extracted["ticker_id"]
         df["fx_rate"] = extracted["fx_rate"]
         df["record_date"] = extracted["record_date"] 
+
+        logger.info(
+            "Extracted transaction fields | rows=%d | transactions=%s",
+            len(df),
+            df["transaction"].dropna().value_counts().to_dict(),
+        )
+        _log_money_summary("After extraction", df, logging.DEBUG)
 
         return df
 
@@ -240,7 +337,11 @@ def camelot_extraction_pipeline(file: Path):
     transactions = transactions[["date", "transaction", "ticker_id", "quantity", "execDate", "fx_rate", "debit", "credit", "balance"]]
 
     final_df = clean_transactions(transactions)
-    print(final_df)
+    logger.info(
+        "Camelot extraction complete | file=%s | rows=%d",
+        file.name,
+        len(final_df),
+    )
     return final_df
 
 # if __name__ == "__main__":

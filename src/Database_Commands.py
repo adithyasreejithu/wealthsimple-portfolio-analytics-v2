@@ -2,8 +2,10 @@ import os
 import pandas as pd
 import duckdb as dd 
 from dotenv import load_dotenv
+from system_logger import get_logger
 
 load_dotenv()
+logger = get_logger(__name__)
 # DB_PATH = os.getenv("DB_PATH_TEST")
 
 # def get_db_connnection(): 
@@ -11,12 +13,14 @@ load_dotenv()
 
 def get_ticker_table(con):
     # con = get_db_connnection()
-    return con.execute(
+    df = con.execute(
         '''
             SELECT ticker_id, ticker_symbol 
             FROM tickers;
         '''
     ).fetchdf()
+    logger.debug("Fetched ticker table | rows=%d", len(df))
+    return df
 
 def get_last_date_stored(con):
     # con = get_db_connnection()
@@ -30,14 +34,16 @@ def get_last_date_stored(con):
     result = df["lastDate"].iloc[0]
 
     if result is None or pd.isna(result):
+        logger.info("No historical records have been stored yet")
         return None
 
+    logger.info("Latest historical record date: %s", result.date())
     return result.date()
 
 
 def get_all_tickers(con):
     # con = get_db_connnection()
-    return con.execute(
+    df = con.execute(
         '''
         SELECT 
             CASE 
@@ -52,6 +58,8 @@ def get_all_tickers(con):
             ON t.ticker_id = e.ticker_id;
         '''
     ).fetchdf()
+    logger.info("Fetched tickers for historical pull | rows=%d", len(df))
+    return df
 
 def get_last_date_stored_email(con):
     # con = get_db_connnection()
@@ -65,6 +73,8 @@ def get_last_date_stored_email(con):
     result = df["lastDate"].iloc[0]
 
     if result is None or pd.isna(result):
+        logger.info("No email transactions have been stored yet")
         return None
 
+    logger.info("Latest email transaction date: %s", result.date())
     return result.date()

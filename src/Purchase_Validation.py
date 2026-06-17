@@ -65,6 +65,17 @@ def parse_email_content(email:str, value: str, date) -> pd.DataFrame:
 
         if value == "Dividend":
             row["type"] = value
+
+        logger.debug(
+            "Parsed email transaction | transaction=%s | ticker=%s | quantity=%s | "
+            "total_cost=%s | debit=%s | date=%s",
+            row.get("transaction"),
+            row.get("ticker"),
+            row.get("quantity"),
+            row.get("total_cost"),
+            row.get("debit"),
+            row.get("date"),
+        )
             
         return pd.DataFrame([row])
     
@@ -159,9 +170,18 @@ def email_handler(con):
 
     tdy_date = datetime.today().date()
 
+    if not ensemble:
+        logger.info("No new Wealthsimple emails found; updating check date only")
+        update_email_date(con, tdy_date, 0)
+        return
+
     df = pd.concat(ensemble, ignore_index=True)
     row = df.shape[0]
-    logger.info("Transactions parsed from emails | Rows: %d", row)
+    logger.info(
+        "Transactions parsed from emails | rows=%d | transaction_types=%s",
+        row,
+        df["transaction"].fillna("<missing>").value_counts().to_dict(),
+    )
 
     update_email_date(con, tdy_date, row)
     logger.debug("Updated last email date to %s", tdy_date)

@@ -125,7 +125,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--export-path",
-        help="JSON export path. Defaults to ref/active_policy.json or per-ticker JSON.",
+        help="JSON export path. Defaults to exports/active_policy.json or per-ticker JSON.",
     )
     parser.add_argument(
         "--no-save-db",
