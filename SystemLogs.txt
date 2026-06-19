@@ -1919,3 +1919,436 @@ TypeError: strptime() argument 1 must be str, not datetime.date
 2026-06-16 23:55:32.467 | INFO     | pid=36844 | MonthlyFileExtract:clean_transactions:141 | Transaction cleaning complete | rows=1
 2026-06-16 23:55:32.477 | INFO     | pid=36844 | MonthlyFileExtract:_log_money_summary:50 | After cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
 2026-06-16 23:55:32.771 | INFO     | pid=36844 | yfinance_gather_security_info:get_security_history:111 | No tickers found for historical pull; skipping yfinance download
+2026-06-17 00:08:22.641 | INFO     | pid=26212 | __main__:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-17 00:08:22.641 | INFO     | pid=26212 | __main__:run_data_pipeline:139 | ================================================================================================
+2026-06-17 00:08:22.641 | INFO     | pid=26212 | __main__:run_data_pipeline:140 | Data pipeline initiated | db_path=default
+2026-06-17 00:08:22.641 | INFO     | pid=26212 | Database_Schema:initialize_database:208 | Initializing database schema at Data/PRD_WealthSimple.db
+2026-06-17 00:08:22.656 | INFO     | pid=26212 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-17 00:08:22.661 | INFO     | pid=26212 | Database_Schema:_deploy_schema:191 | Schema creation committed successfully
+2026-06-17 00:08:22.661 | INFO     | pid=26212 | Database_Schema:initialize_database:211 | Database initialization complete
+2026-06-17 00:08:22.661 | INFO     | pid=26212 | __main__:_log_table_counts:41 | Before monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105508, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-17 00:08:22.661 | INFO     | pid=26212 | __main__:camelot_method:87 | Starting Camelot monthly statement extraction
+2026-06-17 00:08:22.667 | INFO     | pid=26212 | FormatFiles:rename_file:18 | Checking 0 data file(s) for Wealthsimple naming cleanup
+2026-06-17 00:08:22.667 | INFO     | pid=26212 | __main__:camelot_method:94 | No new files found
+2026-06-17 00:08:22.667 | INFO     | pid=26212 | __main__:run_data_pipeline:151 | Monthly statement extraction returned | rows=0
+2026-06-17 00:08:22.667 | INFO     | pid=26212 | Database_Upload:upload_transactions:636 | No transactions to upload.
+2026-06-17 00:08:22.668 | INFO     | pid=26212 | __main__:_log_table_counts:41 | After monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105508, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-17 00:08:22.677 | INFO     | pid=26212 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-17 00:08:22.677 | INFO     | pid=26212 | __main__:run_data_pipeline:161 | Monthly statement transaction process completed
+2026-06-17 00:08:22.690 | INFO     | pid=26212 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-17 00:08:22.690 | INFO     | pid=26212 | __main__:_log_table_counts:41 | Before historical/email upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105508, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-17 00:08:22.693 | INFO     | pid=26212 | Database_Commands:get_all_tickers:61 | Fetched tickers for historical pull | rows=33
+2026-06-17 00:08:22.696 | INFO     | pid=26212 | Database_Commands:get_last_date_stored:40 | Latest historical record date: 2026-06-15
+2026-06-17 00:08:22.696 | INFO     | pid=26212 | yfinance_gather_security_info:get_security_history:114 | Last date pulled: 2026-06-15
+2026-06-17 00:08:24.146 | INFO     | pid=26212 | yfinance_gather_security_info:get_security_history:147 | Historical data pull complete | Rows: 66
+2026-06-17 00:08:24.148 | INFO     | pid=26212 | __main__:run_data_pipeline:167 | Historical data pull returned | rows=66
+2026-06-17 00:08:24.148 | INFO     | pid=26212 | Database_Upload:upload_history:692 | Starting upload_history | rows=66 | columns=['Date', 'Ticker', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
+2026-06-17 00:08:24.148 | DEBUG    | pid=26212 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=33
+2026-06-17 00:08:24.151 | WARNING  | pid=26212 | Database_Upload:upload_history:729 | Dropped 14 historical rows missing required fields before insert
+2026-06-17 00:08:24.175 | INFO     | pid=26212 | Database_Upload:upload_history:752 | upload_history complete | submitted=52 | inserted=21 | ignored=31
+2026-06-17 00:08:24.175 | INFO     | pid=26212 | __main__:_log_table_counts:41 | After historical upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105529, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-17 00:08:24.175 | INFO     | pid=26212 | __main__:email_method:127 | Starting email transaction ingestion
+2026-06-17 00:08:24.175 | INFO     | pid=26212 | Purchase_Validation:email_handler:133 | Starting email_handler
+2026-06-17 00:08:24.175 | INFO     | pid=26212 | Database_Commands:get_last_date_stored_email:79 | Latest email transaction date: 2026-06-11
+2026-06-17 00:08:24.175 | DEBUG    | pid=26212 | Purchase_Validation:email_handler:137 | Last email date stored: 2026-06-11
+2026-06-17 00:08:24.175 | ERROR    | pid=26212 | Database_Schema:get_connection:58 | Error during database operation
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Database_Schema.py", line 56, in get_connection
+    yield con # gives connection back to the function caller
+    ^^^^^^^^^
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 174, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 128, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-17 00:08:24.175 | ERROR    | pid=26212 | __main__:run_data_pipeline:177 | Historical or email transaction upload failed
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 174, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 128, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-17 00:08:24.200 | INFO     | pid=26212 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-17 00:08:24.200 | INFO     | pid=26212 | __main__:run_data_pipeline:180 | Data pipeline completed
+2026-06-17 00:08:24.200 | INFO     | pid=26212 | __main__:run_data_pipeline:181 | ================================================================================================
+2026-06-17 00:09:07.868 | INFO     | pid=15640 | __main__:main:261 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-17 00:09:07.882 | INFO     | pid=15640 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-17 00:09:07.948 | INFO     | pid=15640 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-17 00:09:47.745 | INFO     | pid=31200 | __main__:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': True, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.201 | INFO     | pid=17484 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 7)
+2026-06-19 02:15:50.213 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 02:15:50.213 | INFO     | pid=17484 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=0 | cash_rows=1 | unsupported_rows=0
+2026-06-19 02:15:50.213 | INFO     | pid=17484 | Database_Upload:_upload_security_transactions:436 | No security transactions to upload.
+2026-06-19 02:15:50.217 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Cash upload received | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 02:15:50.226 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Cash upload after numeric cleaning | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 02:15:50.226 | INFO     | pid=17484 | Database_Upload:_upload_cash_transactions:591 | Dropped 0 duplicate cash rows within dataframe before DB insert
+2026-06-19 02:15:50.232 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Cash upload submitting to database | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 02:15:50.246 | WARNING  | pid=17484 | Database_Upload:_upload_cash_transactions:600 | Deleted 1 previously zeroed cash rows before corrected insert
+2026-06-19 02:15:50.251 | INFO     | pid=17484 | Database_Upload:_upload_cash_transactions:619 | Cash DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 02:15:50.251 | INFO     | pid=17484 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=0 | security_inserted=0 | security_ignored_duplicates=0 | cash_submitted=1 | cash_inserted=1 | cash_ignored_duplicates=0
+2026-06-19 02:15:50.267 | INFO     | pid=17484 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 9)
+2026-06-19 02:15:50.269 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 02:15:50.271 | INFO     | pid=17484 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=1 | cash_rows=0 | unsupported_rows=0
+2026-06-19 02:15:50.271 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Security upload received | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 02:15:50.273 | DEBUG    | pid=17484 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 02:15:50.273 | DEBUG    | pid=17484 | Database_Upload:_upload_security_transactions:453 | Fetched ticker table with 1 existing tickers
+2026-06-19 02:15:50.273 | INFO     | pid=17484 | Database_Upload:_upload_security_transactions:459 | 0 new tickers not in DB: []
+2026-06-19 02:15:50.273 | INFO     | pid=17484 | Database_Upload:_upload_security_transactions:462 | Retrieved security info | ETFs: 0, Stocks: 0
+2026-06-19 02:15:50.273 | DEBUG    | pid=17484 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 02:15:50.273 | INFO     | pid=17484 | Database_Upload:upload_yfinance_info:226 | Starting upload_yfinance_info | ETFs: 0, Stocks: 0
+2026-06-19 02:15:50.273 | DEBUG    | pid=17484 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 02:15:50.273 | DEBUG    | pid=17484 | Database_Upload:upload_yfinance_info:230 | Fetched ticker table with 1 rows
+2026-06-19 02:15:50.276 | INFO     | pid=17484 | Database_Upload:upload_yfinance_info:256 | No ETF rows to process, skipping
+2026-06-19 02:15:50.276 | INFO     | pid=17484 | Database_Upload:upload_yfinance_info:270 | No stock rows to process, skipping
+2026-06-19 02:15:50.276 | INFO     | pid=17484 | Database_Upload:upload_yfinance_info:300 | upload_yfinance_info complete
+2026-06-19 02:15:50.276 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Security upload after numeric cleaning | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 02:15:50.276 | INFO     | pid=17484 | Database_Upload:_upload_security_transactions:518 | Dropped 0 duplicate security rows within dataframe before DB insert
+2026-06-19 02:15:50.284 | INFO     | pid=17484 | Database_Upload:_log_upload_snapshot:46 | Security upload submitting to database | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31}
+2026-06-19 02:15:50.293 | WARNING  | pid=17484 | Database_Upload:_upload_security_transactions:527 | Deleted 1 previously zeroed security rows before corrected insert
+2026-06-19 02:15:50.293 | INFO     | pid=17484 | Database_Upload:_upload_security_transactions:546 | Security DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 02:15:50.293 | INFO     | pid=17484 | Database_Upload:_upload_cash_transactions:557 | No cash transactions to upload.
+2026-06-19 02:15:50.293 | INFO     | pid=17484 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=1 | security_inserted=1 | security_ignored_duplicates=0 | cash_submitted=0 | cash_inserted=0 | cash_ignored_duplicates=0
+2026-06-19 02:15:50.293 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'email', 'json': False}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'email', 'json': False}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': True}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': True}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': True, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'email', 'json': False}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': True, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.302 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': True, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': True, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': True, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': True, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'metrics': False, 'update_metrics': False, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | main:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | MonthlyFileExtract:clean_transactions:82 | Starting transaction cleaning | rows=1
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | MonthlyFileExtract:_log_money_summary:50 | Before cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 02:15:50.309 | INFO     | pid=17484 | MonthlyFileExtract:_fill_missing_dividend_exec_dates:69 | Filled missing dividend execDate values from date | rows=1
+2026-06-19 02:15:50.328 | INFO     | pid=17484 | MonthlyFileExtract:clean_transactions:141 | Transaction cleaning complete | rows=1
+2026-06-19 02:15:50.330 | INFO     | pid=17484 | MonthlyFileExtract:_log_money_summary:50 | After cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 02:15:50.553 | INFO     | pid=17484 | yfinance_gather_security_info:get_security_history:111 | No tickers found for historical pull; skipping yfinance download
+2026-06-19 18:59:05.865 | INFO     | pid=30848 | __main__:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': True, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:13:08.571 | INFO     | pid=26564 | __main__:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': True, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:15:08.922 | INFO     | pid=30700 | __main__:main:261 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'metrics': False, 'update_metrics': False, 'ticker': None, 'db_path': None, 'export_path': None, 'contribution_amount': 0.0, 'no_export': False, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:15:08.922 | INFO     | pid=30700 | __main__:run_data_pipeline:139 | ================================================================================================
+2026-06-19 19:15:08.922 | INFO     | pid=30700 | __main__:run_data_pipeline:140 | Data pipeline initiated | db_path=default
+2026-06-19 19:15:08.922 | INFO     | pid=30700 | Database_Schema:initialize_database:208 | Initializing database schema at Data/PRD_WealthSimple.db
+2026-06-19 19:15:08.935 | INFO     | pid=30700 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:15:08.942 | INFO     | pid=30700 | Database_Schema:_deploy_schema:191 | Schema creation committed successfully
+2026-06-19 19:15:08.942 | INFO     | pid=30700 | Database_Schema:initialize_database:211 | Database initialization complete
+2026-06-19 19:15:08.944 | INFO     | pid=30700 | __main__:_log_table_counts:41 | Before monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105529, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:15:08.944 | INFO     | pid=30700 | __main__:camelot_method:87 | Starting Camelot monthly statement extraction
+2026-06-19 19:15:08.944 | INFO     | pid=30700 | FormatFiles:rename_file:18 | Checking 0 data file(s) for Wealthsimple naming cleanup
+2026-06-19 19:15:08.946 | INFO     | pid=30700 | __main__:camelot_method:94 | No new files found
+2026-06-19 19:15:08.946 | INFO     | pid=30700 | __main__:run_data_pipeline:151 | Monthly statement extraction returned | rows=0
+2026-06-19 19:15:08.946 | INFO     | pid=30700 | Database_Upload:upload_transactions:636 | No transactions to upload.
+2026-06-19 19:15:08.946 | INFO     | pid=30700 | __main__:_log_table_counts:41 | After monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105529, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:15:08.958 | INFO     | pid=30700 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:15:08.958 | INFO     | pid=30700 | __main__:run_data_pipeline:161 | Monthly statement transaction process completed
+2026-06-19 19:15:08.966 | INFO     | pid=30700 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:15:08.969 | INFO     | pid=30700 | __main__:_log_table_counts:41 | Before historical/email upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105529, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:15:08.969 | INFO     | pid=30700 | Database_Commands:get_all_tickers:61 | Fetched tickers for historical pull | rows=33
+2026-06-19 19:15:08.969 | INFO     | pid=30700 | Database_Commands:get_last_date_stored:40 | Latest historical record date: 2026-06-16
+2026-06-19 19:15:08.969 | INFO     | pid=30700 | yfinance_gather_security_info:get_security_history:114 | Last date pulled: 2026-06-16
+2026-06-19 19:15:10.275 | INFO     | pid=30700 | yfinance_gather_security_info:get_security_history:147 | Historical data pull complete | Rows: 99
+2026-06-19 19:15:10.279 | INFO     | pid=30700 | __main__:run_data_pipeline:167 | Historical data pull returned | rows=99
+2026-06-19 19:15:10.279 | INFO     | pid=30700 | Database_Upload:upload_history:692 | Starting upload_history | rows=99 | columns=['Date', 'Ticker', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
+2026-06-19 19:15:10.279 | DEBUG    | pid=30700 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=33
+2026-06-19 19:15:10.279 | WARNING  | pid=30700 | Database_Upload:upload_history:729 | Dropped 6 historical rows missing required fields before insert
+2026-06-19 19:15:10.307 | INFO     | pid=30700 | Database_Upload:upload_history:752 | upload_history complete | submitted=93 | inserted=72 | ignored=21
+2026-06-19 19:15:10.307 | INFO     | pid=30700 | __main__:_log_table_counts:41 | After historical upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:15:10.307 | INFO     | pid=30700 | __main__:email_method:127 | Starting email transaction ingestion
+2026-06-19 19:15:10.307 | INFO     | pid=30700 | Purchase_Validation:email_handler:133 | Starting email_handler
+2026-06-19 19:15:10.307 | INFO     | pid=30700 | Database_Commands:get_last_date_stored_email:79 | Latest email transaction date: 2026-06-11
+2026-06-19 19:15:10.307 | DEBUG    | pid=30700 | Purchase_Validation:email_handler:137 | Last email date stored: 2026-06-11
+2026-06-19 19:15:10.307 | ERROR    | pid=30700 | Database_Schema:get_connection:58 | Error during database operation
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Database_Schema.py", line 56, in get_connection
+    yield con # gives connection back to the function caller
+    ^^^^^^^^^
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 174, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 128, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-19 19:15:10.307 | ERROR    | pid=30700 | __main__:run_data_pipeline:177 | Historical or email transaction upload failed
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 174, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 128, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-19 19:15:10.343 | INFO     | pid=30700 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:15:10.343 | INFO     | pid=30700 | __main__:run_data_pipeline:180 | Data pipeline completed
+2026-06-19 19:15:10.343 | INFO     | pid=30700 | __main__:run_data_pipeline:181 | ================================================================================================
+2026-06-19 19:34:13.329 | INFO     | pid=9512 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 7)
+2026-06-19 19:34:13.335 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:13.335 | INFO     | pid=9512 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=0 | cash_rows=1 | unsupported_rows=0
+2026-06-19 19:34:13.335 | INFO     | pid=9512 | Database_Upload:_upload_security_transactions:436 | No security transactions to upload.
+2026-06-19 19:34:13.337 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Cash upload received | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:13.345 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Cash upload after numeric cleaning | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:13.347 | INFO     | pid=9512 | Database_Upload:_upload_cash_transactions:591 | Dropped 0 duplicate cash rows within dataframe before DB insert
+2026-06-19 19:34:13.347 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Cash upload submitting to database | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:13.360 | WARNING  | pid=9512 | Database_Upload:_upload_cash_transactions:600 | Deleted 1 previously zeroed cash rows before corrected insert
+2026-06-19 19:34:13.360 | INFO     | pid=9512 | Database_Upload:_upload_cash_transactions:619 | Cash DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 19:34:13.360 | INFO     | pid=9512 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=0 | security_inserted=0 | security_ignored_duplicates=0 | cash_submitted=1 | cash_inserted=1 | cash_ignored_duplicates=0
+2026-06-19 19:34:13.380 | INFO     | pid=9512 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 9)
+2026-06-19 19:34:13.382 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:13.384 | INFO     | pid=9512 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=1 | cash_rows=0 | unsupported_rows=0
+2026-06-19 19:34:13.386 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Security upload received | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:13.386 | DEBUG    | pid=9512 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:34:13.386 | DEBUG    | pid=9512 | Database_Upload:_upload_security_transactions:453 | Fetched ticker table with 1 existing tickers
+2026-06-19 19:34:13.386 | INFO     | pid=9512 | Database_Upload:_upload_security_transactions:459 | 0 new tickers not in DB: []
+2026-06-19 19:34:13.386 | INFO     | pid=9512 | Database_Upload:_upload_security_transactions:462 | Retrieved security info | ETFs: 0, Stocks: 0
+2026-06-19 19:34:13.388 | DEBUG    | pid=9512 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:34:13.388 | INFO     | pid=9512 | Database_Upload:upload_yfinance_info:226 | Starting upload_yfinance_info | ETFs: 0, Stocks: 0
+2026-06-19 19:34:13.388 | DEBUG    | pid=9512 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:34:13.388 | DEBUG    | pid=9512 | Database_Upload:upload_yfinance_info:230 | Fetched ticker table with 1 rows
+2026-06-19 19:34:13.388 | INFO     | pid=9512 | Database_Upload:upload_yfinance_info:256 | No ETF rows to process, skipping
+2026-06-19 19:34:13.388 | INFO     | pid=9512 | Database_Upload:upload_yfinance_info:270 | No stock rows to process, skipping
+2026-06-19 19:34:13.388 | INFO     | pid=9512 | Database_Upload:upload_yfinance_info:300 | upload_yfinance_info complete
+2026-06-19 19:34:13.392 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Security upload after numeric cleaning | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:13.395 | INFO     | pid=9512 | Database_Upload:_upload_security_transactions:518 | Dropped 0 duplicate security rows within dataframe before DB insert
+2026-06-19 19:34:13.395 | INFO     | pid=9512 | Database_Upload:_log_upload_snapshot:46 | Security upload submitting to database | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31}
+2026-06-19 19:34:13.406 | WARNING  | pid=9512 | Database_Upload:_upload_security_transactions:527 | Deleted 1 previously zeroed security rows before corrected insert
+2026-06-19 19:34:13.413 | INFO     | pid=9512 | Database_Upload:_upload_security_transactions:546 | Security DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 19:34:13.413 | INFO     | pid=9512 | Database_Upload:_upload_cash_transactions:557 | No cash transactions to upload.
+2026-06-19 19:34:13.413 | INFO     | pid=9512 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=1 | security_inserted=1 | security_ignored_duplicates=0 | cash_submitted=0 | cash_inserted=0 | cash_ignored_duplicates=0
+2026-06-19 19:34:13.415 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:34:13.423 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:34:13.431 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:13.434 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': True}
+2026-06-19 19:34:13.436 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:13.438 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': True}
+2026-06-19 19:34:13.445 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': True, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:13.446 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': True, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:13.449 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:13.450 | INFO     | pid=9512 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:13.452 | INFO     | pid=9512 | MonthlyFileExtract:clean_transactions:82 | Starting transaction cleaning | rows=1
+2026-06-19 19:34:13.455 | INFO     | pid=9512 | MonthlyFileExtract:_log_money_summary:50 | Before cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:13.457 | INFO     | pid=9512 | MonthlyFileExtract:_fill_missing_dividend_exec_dates:69 | Filled missing dividend execDate values from date | rows=1
+2026-06-19 19:34:13.481 | INFO     | pid=9512 | MonthlyFileExtract:clean_transactions:141 | Transaction cleaning complete | rows=1
+2026-06-19 19:34:13.483 | INFO     | pid=9512 | MonthlyFileExtract:_log_money_summary:50 | After cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:13.910 | INFO     | pid=9512 | yfinance_gather_security_info:get_security_history:111 | No tickers found for historical pull; skipping yfinance download
+2026-06-19 19:34:24.240 | INFO     | pid=12860 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 7)
+2026-06-19 19:34:24.253 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:24.255 | INFO     | pid=12860 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=0 | cash_rows=1 | unsupported_rows=0
+2026-06-19 19:34:24.256 | INFO     | pid=12860 | Database_Upload:_upload_security_transactions:436 | No security transactions to upload.
+2026-06-19 19:34:24.259 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Cash upload received | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:24.278 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Cash upload after numeric cleaning | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:24.280 | INFO     | pid=12860 | Database_Upload:_upload_cash_transactions:591 | Dropped 0 duplicate cash rows within dataframe before DB insert
+2026-06-19 19:34:24.286 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Cash upload submitting to database | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:34:24.300 | WARNING  | pid=12860 | Database_Upload:_upload_cash_transactions:600 | Deleted 1 previously zeroed cash rows before corrected insert
+2026-06-19 19:34:24.306 | INFO     | pid=12860 | Database_Upload:_upload_cash_transactions:619 | Cash DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 19:34:24.306 | INFO     | pid=12860 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=0 | security_inserted=0 | security_ignored_duplicates=0 | cash_submitted=1 | cash_inserted=1 | cash_ignored_duplicates=0
+2026-06-19 19:34:24.333 | INFO     | pid=12860 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 9)
+2026-06-19 19:34:24.340 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:24.342 | INFO     | pid=12860 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=1 | cash_rows=0 | unsupported_rows=0
+2026-06-19 19:34:24.345 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Security upload received | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:24.346 | DEBUG    | pid=12860 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:34:24.346 | DEBUG    | pid=12860 | Database_Upload:_upload_security_transactions:453 | Fetched ticker table with 1 existing tickers
+2026-06-19 19:34:24.348 | INFO     | pid=12860 | Database_Upload:_upload_security_transactions:459 | 0 new tickers not in DB: []
+2026-06-19 19:34:24.348 | INFO     | pid=12860 | Database_Upload:_upload_security_transactions:462 | Retrieved security info | ETFs: 0, Stocks: 0
+2026-06-19 19:34:24.349 | DEBUG    | pid=12860 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:34:24.349 | INFO     | pid=12860 | Database_Upload:upload_yfinance_info:226 | Starting upload_yfinance_info | ETFs: 0, Stocks: 0
+2026-06-19 19:34:24.349 | DEBUG    | pid=12860 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:34:24.349 | DEBUG    | pid=12860 | Database_Upload:upload_yfinance_info:230 | Fetched ticker table with 1 rows
+2026-06-19 19:34:24.351 | INFO     | pid=12860 | Database_Upload:upload_yfinance_info:256 | No ETF rows to process, skipping
+2026-06-19 19:34:24.351 | INFO     | pid=12860 | Database_Upload:upload_yfinance_info:270 | No stock rows to process, skipping
+2026-06-19 19:34:24.351 | INFO     | pid=12860 | Database_Upload:upload_yfinance_info:300 | upload_yfinance_info complete
+2026-06-19 19:34:24.354 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Security upload after numeric cleaning | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:24.355 | INFO     | pid=12860 | Database_Upload:_upload_security_transactions:518 | Dropped 0 duplicate security rows within dataframe before DB insert
+2026-06-19 19:34:24.363 | INFO     | pid=12860 | Database_Upload:_log_upload_snapshot:46 | Security upload submitting to database | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31}
+2026-06-19 19:34:24.380 | WARNING  | pid=12860 | Database_Upload:_upload_security_transactions:527 | Deleted 1 previously zeroed security rows before corrected insert
+2026-06-19 19:34:24.389 | INFO     | pid=12860 | Database_Upload:_upload_security_transactions:546 | Security DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 19:34:24.389 | INFO     | pid=12860 | Database_Upload:_upload_cash_transactions:557 | No cash transactions to upload.
+2026-06-19 19:34:24.389 | INFO     | pid=12860 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=1 | security_inserted=1 | security_ignored_duplicates=0 | cash_submitted=0 | cash_inserted=0 | cash_ignored_duplicates=0
+2026-06-19 19:34:24.398 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:34:24.404 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:34:24.406 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:24.411 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': True}
+2026-06-19 19:34:24.413 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:24.415 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': True}
+2026-06-19 19:34:24.419 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': True, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:24.421 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': True, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:24.424 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:24.426 | INFO     | pid=12860 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:34:24.428 | INFO     | pid=12860 | MonthlyFileExtract:clean_transactions:82 | Starting transaction cleaning | rows=1
+2026-06-19 19:34:24.431 | INFO     | pid=12860 | MonthlyFileExtract:_log_money_summary:50 | Before cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:24.432 | INFO     | pid=12860 | MonthlyFileExtract:_fill_missing_dividend_exec_dates:69 | Filled missing dividend execDate values from date | rows=1
+2026-06-19 19:34:24.464 | INFO     | pid=12860 | MonthlyFileExtract:clean_transactions:141 | Transaction cleaning complete | rows=1
+2026-06-19 19:34:24.468 | INFO     | pid=12860 | MonthlyFileExtract:_log_money_summary:50 | After cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:34:24.938 | INFO     | pid=12860 | yfinance_gather_security_info:get_security_history:111 | No tickers found for historical pull; skipping yfinance download
+2026-06-19 19:35:02.843 | INFO     | pid=21596 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 7)
+2026-06-19 19:35:02.848 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:35:02.848 | INFO     | pid=21596 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=0 | cash_rows=1 | unsupported_rows=0
+2026-06-19 19:35:02.848 | INFO     | pid=21596 | Database_Upload:_upload_security_transactions:436 | No security transactions to upload.
+2026-06-19 19:35:02.854 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Cash upload received | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 0, 'debit_missing': 1, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:35:02.865 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Cash upload after numeric cleaning | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:35:02.865 | INFO     | pid=21596 | Database_Upload:_upload_cash_transactions:591 | Dropped 0 duplicate cash rows within dataframe before DB insert
+2026-06-19 19:35:02.873 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Cash upload submitting to database | rows=1 | transaction_types={'FPLINT': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 12.34, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 112.34}
+2026-06-19 19:35:02.888 | WARNING  | pid=21596 | Database_Upload:_upload_cash_transactions:600 | Deleted 1 previously zeroed cash rows before corrected insert
+2026-06-19 19:35:02.893 | INFO     | pid=21596 | Database_Upload:_upload_cash_transactions:619 | Cash DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 19:35:02.893 | INFO     | pid=21596 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=0 | security_inserted=0 | security_ignored_duplicates=0 | cash_submitted=1 | cash_inserted=1 | cash_ignored_duplicates=0
+2026-06-19 19:35:02.910 | INFO     | pid=21596 | Database_Upload:upload_transactions:643 | Starting upload_transactions | Shape: (1, 9)
+2026-06-19 19:35:02.910 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Normalized transaction upload input | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:35:02.910 | INFO     | pid=21596 | Database_Upload:upload_transactions:665 | Classified transactions | security_rows=1 | cash_rows=0 | unsupported_rows=0
+2026-06-19 19:35:02.914 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Security upload received | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:35:02.917 | DEBUG    | pid=21596 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:35:02.917 | DEBUG    | pid=21596 | Database_Upload:_upload_security_transactions:453 | Fetched ticker table with 1 existing tickers
+2026-06-19 19:35:02.917 | INFO     | pid=21596 | Database_Upload:_upload_security_transactions:459 | 0 new tickers not in DB: []
+2026-06-19 19:35:02.917 | INFO     | pid=21596 | Database_Upload:_upload_security_transactions:462 | Retrieved security info | ETFs: 0, Stocks: 0
+2026-06-19 19:35:02.917 | DEBUG    | pid=21596 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:35:02.917 | INFO     | pid=21596 | Database_Upload:upload_yfinance_info:226 | Starting upload_yfinance_info | ETFs: 0, Stocks: 0
+2026-06-19 19:35:02.919 | DEBUG    | pid=21596 | Database_Commands:get_ticker_table:22 | Fetched ticker table | rows=1
+2026-06-19 19:35:02.919 | DEBUG    | pid=21596 | Database_Upload:upload_yfinance_info:230 | Fetched ticker table with 1 rows
+2026-06-19 19:35:02.919 | INFO     | pid=21596 | Database_Upload:upload_yfinance_info:256 | No ETF rows to process, skipping
+2026-06-19 19:35:02.919 | INFO     | pid=21596 | Database_Upload:upload_yfinance_info:270 | No stock rows to process, skipping
+2026-06-19 19:35:02.919 | INFO     | pid=21596 | Database_Upload:upload_yfinance_info:300 | upload_yfinance_info complete
+2026-06-19 19:35:02.923 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Security upload after numeric cleaning | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:35:02.925 | INFO     | pid=21596 | Database_Upload:_upload_security_transactions:518 | Dropped 0 duplicate security rows within dataframe before DB insert
+2026-06-19 19:35:02.927 | INFO     | pid=21596 | Database_Upload:_log_upload_snapshot:46 | Security upload submitting to database | rows=1 | transaction_types={'DIV': 1} | money={'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31}
+2026-06-19 19:35:02.934 | WARNING  | pid=21596 | Database_Upload:_upload_security_transactions:527 | Deleted 1 previously zeroed security rows before corrected insert
+2026-06-19 19:35:02.944 | INFO     | pid=21596 | Database_Upload:_upload_security_transactions:546 | Security DB insert complete | submitted=1 | inserted=1 | ignored=0
+2026-06-19 19:35:02.944 | INFO     | pid=21596 | Database_Upload:_upload_cash_transactions:557 | No cash transactions to upload.
+2026-06-19 19:35:02.944 | INFO     | pid=21596 | Database_Upload:upload_transactions:675 | upload_transactions complete | security_submitted=1 | security_inserted=1 | security_ignored_duplicates=0 | cash_submitted=0 | cash_inserted=0 | cash_ignored_duplicates=0
+2026-06-19 19:35:02.944 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:35:02.950 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:35:02.952 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:35:02.956 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': True}
+2026-06-19 19:35:02.958 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:35:02.960 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': True}
+2026-06-19 19:35:02.964 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': True, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:35:02.965 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': True, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:35:02.971 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'ticker': 'AAPL', 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:35:02.973 | INFO     | pid=21596 | main:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': True, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:35:02.973 | INFO     | pid=21596 | MonthlyFileExtract:clean_transactions:82 | Starting transaction cleaning | rows=1
+2026-06-19 19:35:02.979 | INFO     | pid=21596 | MonthlyFileExtract:_log_money_summary:50 | Before cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:35:02.981 | INFO     | pid=21596 | MonthlyFileExtract:_fill_missing_dividend_exec_dates:69 | Filled missing dividend execDate values from date | rows=1
+2026-06-19 19:35:02.992 | INFO     | pid=21596 | MonthlyFileExtract:clean_transactions:141 | Transaction cleaning complete | rows=1
+2026-06-19 19:35:02.992 | INFO     | pid=21596 | MonthlyFileExtract:_log_money_summary:50 | After cleaning money summary: {'rows': 1, 'debit_present': 1, 'debit_missing': 0, 'debit_total': 0.0, 'credit_present': 1, 'credit_missing': 0, 'credit_total': 0.31, 'balance_present': 1, 'balance_missing': 0, 'balance_total': 177.36}
+2026-06-19 19:35:03.340 | INFO     | pid=21596 | yfinance_gather_security_info:get_security_history:111 | No tickers found for historical pull; skipping yfinance download
+2026-06-19 19:40:39.990 | INFO     | pid=12784 | __main__:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:40:40.004 | INFO     | pid=12784 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:40:40.053 | INFO     | pid=12784 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:40:52.424 | INFO     | pid=3012 | __main__:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:40:52.424 | INFO     | pid=3012 | __main__:run_data_pipeline:138 | ================================================================================================
+2026-06-19 19:40:52.424 | INFO     | pid=3012 | __main__:run_data_pipeline:139 | Data pipeline initiated | db_path=default
+2026-06-19 19:40:52.424 | INFO     | pid=3012 | Database_Schema:initialize_database:208 | Initializing database schema at Data/PRD_WealthSimple.db
+2026-06-19 19:40:52.441 | INFO     | pid=3012 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:40:52.453 | INFO     | pid=3012 | Database_Schema:_deploy_schema:191 | Schema creation committed successfully
+2026-06-19 19:40:52.453 | INFO     | pid=3012 | Database_Schema:initialize_database:211 | Database initialization complete
+2026-06-19 19:40:52.454 | INFO     | pid=3012 | __main__:_log_table_counts:40 | Before monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:40:52.454 | INFO     | pid=3012 | __main__:camelot_method:86 | Starting Camelot monthly statement extraction
+2026-06-19 19:40:52.456 | INFO     | pid=3012 | FormatFiles:rename_file:18 | Checking 0 data file(s) for Wealthsimple naming cleanup
+2026-06-19 19:40:52.456 | INFO     | pid=3012 | __main__:camelot_method:93 | No new files found
+2026-06-19 19:40:52.456 | INFO     | pid=3012 | __main__:run_data_pipeline:150 | Monthly statement extraction returned | rows=0
+2026-06-19 19:40:52.456 | INFO     | pid=3012 | Database_Upload:upload_transactions:636 | No transactions to upload.
+2026-06-19 19:40:52.457 | INFO     | pid=3012 | __main__:_log_table_counts:40 | After monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:40:52.467 | INFO     | pid=3012 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:40:52.467 | INFO     | pid=3012 | __main__:run_data_pipeline:160 | Monthly statement transaction process completed
+2026-06-19 19:40:52.477 | INFO     | pid=3012 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:40:52.479 | INFO     | pid=3012 | __main__:_log_table_counts:40 | Before historical/email upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:40:52.481 | INFO     | pid=3012 | Database_Commands:get_all_tickers:61 | Fetched tickers for historical pull | rows=33
+2026-06-19 19:40:52.485 | INFO     | pid=3012 | Database_Commands:get_last_date_stored:40 | Latest historical record date: 2026-06-18
+2026-06-19 19:40:52.485 | INFO     | pid=3012 | yfinance_gather_security_info:get_security_history:114 | Last date pulled: 2026-06-18
+2026-06-19 19:40:52.485 | INFO     | pid=3012 | yfinance_gather_security_info:get_security_history:124 | Data was pulled today - no pull was made 
+2026-06-19 19:40:52.485 | INFO     | pid=3012 | __main__:run_data_pipeline:166 | Historical data pull returned | rows=0
+2026-06-19 19:40:52.485 | INFO     | pid=3012 | __main__:email_method:126 | Starting email transaction ingestion
+2026-06-19 19:40:52.485 | INFO     | pid=3012 | Purchase_Validation:email_handler:133 | Starting email_handler
+2026-06-19 19:40:52.487 | INFO     | pid=3012 | Database_Commands:get_last_date_stored_email:79 | Latest email transaction date: 2026-06-11
+2026-06-19 19:40:52.487 | DEBUG    | pid=3012 | Purchase_Validation:email_handler:137 | Last email date stored: 2026-06-11
+2026-06-19 19:40:52.487 | ERROR    | pid=3012 | Database_Schema:get_connection:58 | Error during database operation
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Database_Schema.py", line 56, in get_connection
+    yield con # gives connection back to the function caller
+    ^^^^^^^^^
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 173, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 127, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-19 19:40:52.489 | ERROR    | pid=3012 | __main__:run_data_pipeline:176 | Historical or email transaction upload failed
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 173, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 127, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-19 19:40:52.496 | INFO     | pid=3012 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:40:52.496 | INFO     | pid=3012 | __main__:run_data_pipeline:179 | Data pipeline completed
+2026-06-19 19:40:52.498 | INFO     | pid=3012 | __main__:run_data_pipeline:180 | ================================================================================================
+2026-06-19 19:41:49.690 | INFO     | pid=21716 | __main__:main:239 | CLI arguments parsed: {'holdings': False, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'transactions', 'json': False}
+2026-06-19 19:41:49.690 | INFO     | pid=21716 | __main__:run_data_pipeline:138 | ================================================================================================
+2026-06-19 19:41:49.690 | INFO     | pid=21716 | __main__:run_data_pipeline:139 | Data pipeline initiated | db_path=default
+2026-06-19 19:41:49.690 | INFO     | pid=21716 | Database_Schema:initialize_database:208 | Initializing database schema at Data/PRD_WealthSimple.db
+2026-06-19 19:41:49.703 | INFO     | pid=21716 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:41:49.709 | INFO     | pid=21716 | Database_Schema:_deploy_schema:191 | Schema creation committed successfully
+2026-06-19 19:41:49.709 | INFO     | pid=21716 | Database_Schema:initialize_database:211 | Database initialization complete
+2026-06-19 19:41:49.712 | INFO     | pid=21716 | __main__:_log_table_counts:40 | Before monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:41:49.712 | INFO     | pid=21716 | __main__:camelot_method:86 | Starting Camelot monthly statement extraction
+2026-06-19 19:41:49.712 | INFO     | pid=21716 | FormatFiles:rename_file:18 | Checking 0 data file(s) for Wealthsimple naming cleanup
+2026-06-19 19:41:49.712 | INFO     | pid=21716 | __main__:camelot_method:93 | No new files found
+2026-06-19 19:41:49.712 | INFO     | pid=21716 | __main__:run_data_pipeline:150 | Monthly statement extraction returned | rows=0
+2026-06-19 19:41:49.712 | INFO     | pid=21716 | Database_Upload:upload_transactions:636 | No transactions to upload.
+2026-06-19 19:41:49.714 | INFO     | pid=21716 | __main__:_log_table_counts:40 | After monthly statement upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:41:49.723 | INFO     | pid=21716 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:41:49.723 | INFO     | pid=21716 | __main__:run_data_pipeline:160 | Monthly statement transaction process completed
+2026-06-19 19:41:49.735 | INFO     | pid=21716 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:41:49.735 | INFO     | pid=21716 | __main__:_log_table_counts:40 | Before historical/email upload table counts: {'tickers': 33, 'transactions': 492, 'cash_transactions': 85, 'HistoricalRecords': 105601, 'Email_Transactions': 445, 'EmailCheckDate': 1}
+2026-06-19 19:41:49.741 | INFO     | pid=21716 | Database_Commands:get_all_tickers:61 | Fetched tickers for historical pull | rows=33
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | Database_Commands:get_last_date_stored:40 | Latest historical record date: 2026-06-18
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | yfinance_gather_security_info:get_security_history:114 | Last date pulled: 2026-06-18
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | yfinance_gather_security_info:get_security_history:124 | Data was pulled today - no pull was made 
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | __main__:run_data_pipeline:166 | Historical data pull returned | rows=0
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | __main__:email_method:126 | Starting email transaction ingestion
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | Purchase_Validation:email_handler:133 | Starting email_handler
+2026-06-19 19:41:49.743 | INFO     | pid=21716 | Database_Commands:get_last_date_stored_email:79 | Latest email transaction date: 2026-06-11
+2026-06-19 19:41:49.743 | DEBUG    | pid=21716 | Purchase_Validation:email_handler:137 | Last email date stored: 2026-06-11
+2026-06-19 19:41:49.743 | ERROR    | pid=21716 | Database_Schema:get_connection:58 | Error during database operation
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Database_Schema.py", line 56, in get_connection
+    yield con # gives connection back to the function caller
+    ^^^^^^^^^
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 173, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 127, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-19 19:41:49.746 | ERROR    | pid=21716 | __main__:run_data_pipeline:176 | Historical or email transaction upload failed
+Traceback (most recent call last):
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 173, in run_data_pipeline
+    email_method(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\main.py", line 127, in email_method
+    email_handler(con)
+  File "c:\Projects\Python\wealthsimple-portfolio-analytics-v2\src\Purchase_Validation.py", line 145, in email_handler
+    last_date = datetime.strptime(last_date, "%Y-%m-%d").date()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: strptime() argument 1 must be str, not datetime.date
+2026-06-19 19:41:49.746 | INFO     | pid=21716 | Database_Schema:close_connection:41 | Database connection closed
+2026-06-19 19:41:49.746 | INFO     | pid=21716 | __main__:run_data_pipeline:179 | Data pipeline completed
+2026-06-19 19:41:49.746 | INFO     | pid=21716 | __main__:run_data_pipeline:180 | ================================================================================================
+2026-06-19 19:45:31.284 | INFO     | pid=18916 | __main__:main:239 | CLI arguments parsed: {'holdings': True, 'update_holdings': False, 'policy': False, 'update_policy': False, 'ticker': None, 'db_path': None, 'export_path': None, 'holding_source': 'email', 'json': False}
+2026-06-19 19:45:31.298 | INFO     | pid=18916 | Database_Schema:get_shared_connection:31 | Database connection opened: Data/PRD_WealthSimple.db
+2026-06-19 19:45:31.374 | INFO     | pid=18916 | Database_Schema:close_connection:41 | Database connection closed

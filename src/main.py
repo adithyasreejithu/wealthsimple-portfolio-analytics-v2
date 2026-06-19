@@ -10,14 +10,13 @@ from yfinance_gather_security_info import get_security_history
 from system_logger import get_logger
 from Purchase_Validation import email_handler
 from FormatFiles import rename_file
-from run_portfolio_metrics import format_metrics_output, run_portfolio_metrics
 from run_portfolio_policy import format_grouping_table, run_policy_grouping
 from run_current_holdings import (
     _filter_holdings_by_ticker,
     format_holdings_table,
-    get_current_holdings,
 )
 from portfolio_policy import normalize_ticker
+from portfolio_tools import get_current_holdings
 import pandas as pd
 
 logger = get_logger(__name__)
@@ -206,20 +205,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run the data pipeline first, then update portfolio policy grouping.",
     )
     parser.add_argument(
-        "--metrics",
-        action="store_true",
-        help="Run portfolio metrics instead of the data pipeline.",
-    )
-    parser.add_argument(
-        "--update-metrics",
-        action="store_true",
-        help="Run the data pipeline first, then calculate portfolio metrics.",
-    )
-    parser.add_argument(
         "--ticker",
         help=(
-            "Only run holdings, policy grouping, or metrics for one ticker. "
-            "Requires a holdings, policy, or metrics flag."
+            "Only run holdings or policy grouping for one ticker. "
+            "Requires a holdings or policy flag."
         ),
     )
     parser.add_argument(
@@ -228,24 +217,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--export-path",
-        help="JSON export path to use for policy grouping or metrics.",
-    )
-    parser.add_argument(
-        "--contribution-amount",
-        type=float,
-        default=0.0,
-        help="Contribution amount used for metrics contribution recommendations.",
-    )
-    parser.add_argument(
-        "--no-export",
-        action="store_true",
-        help="Print metrics without writing a JSON export.",
+        help="JSON export path to use for policy grouping.",
     )
     parser.add_argument(
         "--holding-source",
         choices=["transactions", "email"],
         default="transactions",
-        help="Holding source for holdings and metrics. Defaults to transactions.",
+        help="Holding source for holdings. Defaults to transactions.",
     )
     parser.add_argument(
         "--json",
@@ -264,39 +242,29 @@ def main(argv: list[str] | None = None) -> int:
         args.update_holdings,
         args.policy,
         args.update_policy,
-        args.metrics,
-        args.update_metrics,
     ]
 
     if sum(1 for enabled in mode_flags if enabled) > 1:
         parser.error(
             "Use only one of --holdings, --update-holdings, --policy, "
-            "--update-policy, --metrics, or --update-metrics"
+            "or --update-policy"
         )
 
     if args.ticker and not any(mode_flags):
-        parser.error("--ticker requires a holdings, policy, or metrics flag")
+        parser.error("--ticker requires a holdings or policy flag")
 
-    if args.export_path and not (
-        args.policy or args.update_policy or args.metrics or args.update_metrics
-    ):
-        parser.error("--export-path requires --policy, --update-policy, --metrics, or --update-metrics")
-
-    if args.contribution_amount and not (args.metrics or args.update_metrics):
-        parser.error("--contribution-amount requires --metrics or --update-metrics")
-
-    if args.no_export and not (args.metrics or args.update_metrics):
-        parser.error("--no-export requires --metrics or --update-metrics")
+    if args.export_path and not (args.policy or args.update_policy):
+        parser.error("--export-path requires --policy or --update-policy")
 
     if args.holding_source != "transactions" and not (
-        args.holdings or args.update_holdings or args.metrics or args.update_metrics
+        args.holdings or args.update_holdings
     ):
-        parser.error("--holding-source requires holdings or metrics mode")
+        parser.error("--holding-source requires holdings mode")
 
     if args.json and not (args.holdings or args.update_holdings):
         parser.error("--json requires --holdings or --update-holdings")
 
-    if args.update_holdings or args.update_policy or args.update_metrics:
+    if args.update_holdings or args.update_policy:
         run_data_pipeline(db_path=args.db_path)
 
     if args.holdings or args.update_holdings:
@@ -347,30 +315,6 @@ def main(argv: list[str] | None = None) -> int:
         print(format_grouping_table(active_grouping))
         print(f"\nJSON export: {active_grouping['export_path']}")
         print("Database table updated: portfolio_grouping_active")
-        return 0
-
-    if args.metrics or args.update_metrics:
-        try:
-            metrics = run_portfolio_metrics(
-                ticker=args.ticker,
-                db_path=args.db_path,
-                export_path=args.export_path,
-                contribution_amount=args.contribution_amount,
-                export=not args.no_export,
-                holding_source=args.holding_source,
-            )
-        except ValueError as exc:
-            print(exc)
-            return 1
-        except Exception as exc:
-            print(f"Portfolio metrics failed: {exc}")
-            return 1
-        finally:
-            close_connection()
-
-        print(format_metrics_output(metrics))
-        if not args.no_export:
-            print(f"\nJSON export: {metrics['export_path']}")
         return 0
 
     run_data_pipeline(db_path=args.db_path)

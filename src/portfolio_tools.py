@@ -1,9 +1,13 @@
 """
-Clean data access tools for portfolio analytics.
+Read-only portfolio data access helpers.
 
-The functions in this module retrieve and format data from the existing DuckDB
-schema. They intentionally avoid heavy financial calculations; those belong in
-portfolio_metrics.py.
+The functions in this module translate the existing DuckDB schema into small
+Python dictionaries that other workflows can consume. They handle holdings,
+cash, current allocation, and historical value reconstruction, but avoid heavy
+financial analytics so policy grouping and metrics logic stay separate.
+
+`src/main.py` is the only CLI entrypoint. This module is library code and should
+stay safe to import from tests, notebooks, and future workflows.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ HOLDING_SOURCES = ("transactions", "email")
 
 
 def _connection_context(con=None, db_path: str | None = None):
+    """Use an injected connection for tests, otherwise open the configured DB."""
     if con is not None:
         return nullcontext(con)
 
@@ -45,6 +50,7 @@ def _table_exists(con, table_name: str) -> bool:
 
 
 def _normalize_holding_source(source: str) -> str:
+    """Validate which transaction table should define current ownership."""
     normalized = str(source).strip().lower()
     if normalized not in HOLDING_SOURCES:
         raise ValueError(
@@ -54,6 +60,7 @@ def _normalize_holding_source(source: str) -> str:
 
 
 def _active_grouping_by_ticker(con) -> dict[str, dict]:
+    """Return the last saved policy grouping by normalized ticker, if present."""
     if not _table_exists(con, "portfolio_grouping_active"):
         return {}
 
@@ -80,7 +87,8 @@ def _active_grouping_by_ticker(con) -> dict[str, dict]:
 def _grouping_for_row(row: dict, active_grouping: dict[str, dict]) -> dict:
     stored_grouping = active_grouping.get(normalize_ticker(row.get("ticker")))
     if stored_grouping:
-        # The persisted policy run is authoritative until the user regenerates it.
+        # A saved policy run represents the last reviewed grouping snapshot, so
+        # holdings views use it before falling back to live metadata inference.
         return {
             "portfolio_group": stored_grouping.get("portfolio_group"),
             "grouping_method": stored_grouping.get("grouping_method"),
@@ -91,6 +99,7 @@ def _grouping_for_row(row: dict, active_grouping: dict[str, dict]) -> dict:
 
 
 def _holding_totals_cte(source: str) -> str:
+    """Build the source-specific ownership and cost-basis aggregate CTE."""
     if source == "transactions":
         return """
         holding_totals AS (
@@ -164,6 +173,8 @@ def get_current_holdings(
     """
     source = _normalize_holding_source(source)
     with _connection_context(con, db_path) as active_con:
+        # Email-derived holdings are optional in the local schema; fail early
+        # with a focused message instead of surfacing a lower-level SQL error.
         if source == "email" and not _table_exists(active_con, "Email_Transactions"):
             raise ValueError("Email_Transactions table does not exist")
 
@@ -230,6 +241,8 @@ def get_current_holdings(
     if df.empty:
         return []
 
+    # Current holdings carry policy grouping so CLI output and downstream tools
+    # can use the same bucket labels without rerunning the policy command.
     df["ticker"] = df["ticker"].astype(str)
     grouped = df.apply(
         lambda row: _grouping_for_row(row.to_dict(), active_grouping),
@@ -240,6 +253,8 @@ def get_current_holdings(
     df["grouping_status"] = grouped.apply(lambda row: row["grouping_status"])
     df["quantity"] = df["quantity"].astype(float)
     df["current_price"] = df["current_price"].astype(float)
+    # Market value uses the latest stored adjusted close; this keeps holdings
+    # deterministic and avoids making network calls from a read helper.
     df["market_value"] = df["quantity"] * df["current_price"]
     df["average_cost"] = df.apply(
         lambda row: (
@@ -249,6 +264,8 @@ def get_current_holdings(
         ),
         axis=1,
     )
+    # Cost basis is normalized to the remaining open quantity, while realized
+    # proceeds remain available separately for future reporting.
     df["cost_basis"] = df["average_cost"] * df["quantity"]
     df["unrealized_gain"] = df["market_value"] - df["cost_basis"]
 
@@ -256,7 +273,12 @@ def get_current_holdings(
 
 
 def get_cash_available(con=None, db_path: str | None = None) -> dict:
-    """Return the latest cash balance, falling back to net cash flow."""
+    """
+    Return the latest cash balance, falling back to net cash flow.
+
+    Wealthsimple statements can store explicit balance snapshots. When those
+    are absent, net cash flow is the best deterministic local approximation.
+    """
     latest_balance_query = """
         SELECT balance
         FROM cash_transactions
@@ -340,7 +362,12 @@ def get_allocation_by_bucket(
     include_cash: bool = True,
     source: str = "transactions",
 ) -> dict:
-    """Return current allocation weights by policy bucket."""
+    """
+    Return current allocation weights by policy bucket.
+
+    Cash is included by default because policy targets are normally interpreted
+    against the full account value, not only invested securities.
+    """
     holdings = get_current_holdings(con=con, db_path=db_path, source=source)
     bucket_values: dict[str, float] = {}
 
@@ -459,6 +486,8 @@ def get_historical_values(
         if source == "email" and not _table_exists(active_con, "Email_Transactions"):
             raise ValueError("Email_Transactions table does not exist")
 
+        # The transaction sources use different wording for buys/sells, but both
+        # are reduced to dated signed quantities before joining to prices.
         source_query = (
             transactions_query
             if source == "transactions"
@@ -473,6 +502,8 @@ def get_historical_values(
     transactions["date"] = pd.to_datetime(transactions["date"])
     prices["date"] = pd.to_datetime(prices["date"])
 
+    # Rebuild historical holdings by cumulatively summing transactions, then
+    # apply the latest known price on each stored price date.
     price_pivot = prices.pivot_table(
         index="date",
         columns="ticker",

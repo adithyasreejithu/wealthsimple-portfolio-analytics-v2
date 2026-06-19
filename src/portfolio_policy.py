@@ -1,5 +1,10 @@
 """
-Policy and deterministic grouping tools for the AI Portfolio Brain.
+Portfolio policy loading, grouping, and active grouping persistence.
+
+This module owns the deterministic policy decisions used by the rest of the
+project. Static policy definitions stay in JSON reference files so they can be
+reviewed separately from Python code, while this module applies those rules to
+actual holdings and writes the current grouping snapshot to DuckDB.
 
 The source of truth for portfolio group definitions lives in ref/policy_v1.json.
 The source of truth for sector, industry, ETF, and asset-class rules lives in
@@ -58,6 +63,8 @@ GROUP_SETTINGS = {
 }
 
 
+# Manual overrides are intentionally checked before metadata rules. They capture
+# portfolio policy decisions that should not drift when external metadata changes.
 MANUAL_GROUP_OVERRIDES = {
     "XEQT": "Core",
     "SCHD": "Income",
@@ -82,6 +89,7 @@ DECISION_HIERARCHY = [
 
 
 def _load_json(path: Path) -> dict:
+    """Read a policy/reference JSON file without mutating caller state."""
     with path.open("r", encoding="utf-8") as file:
         return json.load(file)
 
@@ -104,6 +112,7 @@ def _policy_groups(policy: dict | None = None) -> dict:
 
 
 def _build_buckets(policy: dict | None = None) -> dict:
+    """Merge reviewed JSON policy text with runtime targets and limits."""
     groups = _policy_groups(policy)
     buckets = {}
 
@@ -125,7 +134,12 @@ BUCKETS = _build_buckets()
 
 
 def get_policy() -> dict:
-    """Return a copy of the loaded policy plus runtime settings."""
+    """
+    Return a copy of the loaded policy plus runtime settings.
+
+    Callers receive deep copies for mutable structures so experiments or tests
+    cannot accidentally change the module-level policy used by later calls.
+    """
     return {
         "buckets": deepcopy(BUCKETS),
         "manual_group_overrides": deepcopy(MANUAL_GROUP_OVERRIDES),
@@ -218,7 +232,13 @@ def group_holding(
     policy: dict | None = None,
     grouping_reference: dict | None = None,
 ) -> dict:
-    """Assign one holding to a portfolio group using deterministic rules."""
+    """
+    Assign one holding to a portfolio group using deterministic rules.
+
+    Grouping precedence is deliberate: manual ticker decisions win first, cash
+    is separated next, ETF rules inspect fund metadata, and stock rules fall
+    back from industry to sector before returning an unresolved review result.
+    """
     policy = policy if policy is not None else load_reference_policy()
     grouping_reference = (
         grouping_reference
@@ -232,6 +252,7 @@ def group_holding(
     if not metadata["security_type"]:
         warnings.append(f"Missing security_type metadata for {ticker}")
 
+    # Reviewed ticker-level choices are authoritative over broad metadata rules.
     manual_group = _manual_group_for_ticker(ticker)
     if manual_group:
         return _grouping_result(
@@ -256,6 +277,8 @@ def group_holding(
             warnings,
         )
 
+    # ETFs and individual equities use different metadata vocabularies, so they
+    # are routed through separate rule sets before producing the same result.
     if "etf" in security_type or metadata.get("etf_category"):
         group, method = _group_etf(metadata, policy, grouping_reference)
     else:
@@ -288,6 +311,7 @@ def _group_etf(
     policy: dict,
     grouping_reference: dict,
 ) -> tuple[str | None, str]:
+    """Group an ETF by matching fund metadata against reference keywords."""
     text = " ".join(
         _normalize_text(metadata.get(field))
         for field in (
@@ -318,6 +342,7 @@ def _group_stock(
     grouping_reference: dict,
     warnings: list[str],
 ) -> tuple[str | None, str]:
+    """Group an equity by industry first, then by sector as a broader fallback."""
     sector = _normalize_text(metadata.get("sector"))
     industry = _normalize_text(metadata.get("industry"))
     ticker = metadata.get("ticker")
@@ -335,6 +360,8 @@ def _group_stock(
             _normalize_text(alias) == sector for alias in sector_aliases
         )
 
+        # Industry is the most specific metadata available for stocks, so it is
+        # allowed to override the broader sector bias when present.
         for industry_group, industry_rules in sector_rules.get("industry_groups", {}).items():
             candidate_industries = list(industry_rules.get("industries", []))
             candidate_industries += industry_rules.get("sub_industries", [])
@@ -370,6 +397,7 @@ def _grouping_result(
     grouping_reference: dict,
     warnings: list[str],
 ) -> dict:
+    """Build the shared output shape used by exports, tests, and DuckDB rows."""
     return {
         "ticker": metadata.get("ticker"),
         "portfolio_group": portfolio_group,
@@ -389,6 +417,7 @@ def _grouping_result(
 
 
 def _connection_context(con=None, db_path: str | None = None):
+    """Use an injected connection for tests, otherwise open the configured DB."""
     if con is not None:
         return nullcontext(con)
 
@@ -400,7 +429,12 @@ def _connection_context(con=None, db_path: str | None = None):
 
 
 def get_current_holdings_from_db(con=None, db_path: str | None = None) -> list[dict]:
-    """Pull current holdings and metadata from the existing DuckDB schema."""
+    """
+    Pull current holdings and metadata from the existing DuckDB schema.
+
+    This query is intentionally read-only and returns the metadata needed by
+    grouping rules, not the richer holdings view produced by portfolio_tools.
+    """
     query = """
         WITH latest_prices AS (
             SELECT ticker_id, adj_close AS current_price
@@ -468,7 +502,12 @@ def generate_active_grouping(
     db_path: str | None = None,
     export_path: str | Path | None = None,
 ) -> dict:
-    """Generate active grouping results for current holdings."""
+    """
+    Generate active grouping results for current holdings.
+
+    The active grouping snapshot records both the selected group and the policy
+    versions used to make that decision, which makes later analytics auditable.
+    """
     policy = policy if policy is not None else load_reference_policy()
     grouping_reference = (
         grouping_reference
@@ -519,6 +558,7 @@ def export_active_grouping(
 
 
 def _active_grouping_rows(active_grouping: dict) -> list[dict]:
+    """Flatten generated grouping data into the persisted table shape."""
     return [
         {
             "ticker": row.get("ticker"),
@@ -566,7 +606,13 @@ def save_active_grouping(
     *,
     replace_all: bool = True,
 ) -> None:
-    """Persist runtime grouping results in DuckDB without duplicating references."""
+    """
+    Persist runtime grouping results in DuckDB without duplicating references.
+
+    Full policy runs replace the table so stale rows disappear. Per-ticker runs
+    replace only incoming tickers, which keeps the rest of the last reviewed
+    grouping snapshot intact.
+    """
     rows = _active_grouping_rows(active_grouping)
     df = pd.DataFrame(rows)
 

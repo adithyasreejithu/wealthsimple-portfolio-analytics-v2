@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import argparse
 import json
-import sys
 from contextlib import contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,7 +8,7 @@ from typing import Any
 
 import duckdb
 
-from Database_Schema import DB_PATH, close_connection
+from Database_Schema import DB_PATH
 from portfolio_metrics import (
     calculate_position_weight,
     calculate_position_weights,
@@ -212,70 +210,3 @@ def format_metrics_output(metrics: dict) -> str:
 
     return "\n".join(lines)
 
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Generate portfolio metrics from current DuckDB data.",
-    )
-    parser.add_argument(
-        "--ticker",
-        help="Only show metrics for one ticker, for example AAPL.",
-    )
-    parser.add_argument(
-        "--db-path",
-        help="DuckDB path. Defaults to Database_Schema.DB_PATH.",
-    )
-    parser.add_argument(
-        "--export-path",
-        help="JSON export path. Defaults to exports/portfolio_metrics_summary.json or per-ticker JSON.",
-    )
-    parser.add_argument(
-        "--contribution-amount",
-        type=float,
-        default=0.0,
-        help="Contribution amount used for portfolio contribution recommendations.",
-    )
-    parser.add_argument(
-        "--no-export",
-        action="store_true",
-        help="Print metrics without writing a JSON export.",
-    )
-    parser.add_argument(
-        "--holding-source",
-        choices=["transactions", "email"],
-        default="transactions",
-        help="Holding source for metrics. Defaults to transactions.",
-    )
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-
-    try:
-        metrics = run_portfolio_metrics(
-            ticker=args.ticker,
-            db_path=args.db_path,
-            export_path=args.export_path,
-            contribution_amount=args.contribution_amount,
-            export=not args.no_export,
-            holding_source=args.holding_source,
-        )
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    except Exception as exc:
-        print(f"Portfolio metrics failed: {exc}", file=sys.stderr)
-        return 1
-    finally:
-        close_connection()
-
-    print(format_metrics_output(metrics))
-    if not args.no_export:
-        print(f"\nJSON export: {metrics['export_path']}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

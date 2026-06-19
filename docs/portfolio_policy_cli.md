@@ -1,7 +1,8 @@
 # Portfolio Policy CLI
 
-This guide shows how to run portfolio grouping from the terminal. The command
-prints a readable table, exports JSON, and updates the DuckDB table
+This guide shows how to run portfolio grouping from the main terminal command.
+`src/main.py` is the only supported CLI entrypoint. The policy command prints a
+readable table, exports JSON, and updates the DuckDB table
 `portfolio_grouping_active` automatically.
 
 ## Python Environment
@@ -23,51 +24,33 @@ Or call the virtual environment Python directly:
 Run grouping for all current holdings:
 
 ```powershell
-.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py
+.\.wsvenv\Scripts\python.exe src/main.py --policy
 ```
 
 Run grouping for one ticker:
 
 ```powershell
-.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py --ticker AAPL
+.\.wsvenv\Scripts\python.exe src/main.py --policy --ticker AAPL
 ```
 
 Use a specific database:
 
 ```powershell
-.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py --db-path Data/prd_wealthsimple.db
+.\.wsvenv\Scripts\python.exe src/main.py --policy --db-path Data/prd_wealthsimple.db
 ```
 
 Use a specific JSON export path:
 
 ```powershell
-.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py --export-path exports/active_policy.json
+.\.wsvenv\Scripts\python.exe src/main.py --policy --export-path exports/active_policy.json
 ```
 
-Print and export without updating DuckDB:
-
-```powershell
-.\.wsvenv\Scripts\python.exe src/run_portfolio_policy.py --no-save-db
-```
-
-## Run Through Main
+## Update Policy After Pipeline
 
 Run the normal data pipeline only:
 
 ```powershell
 .\.wsvenv\Scripts\python.exe src/main.py
-```
-
-Run policy grouping only, using whatever data is already in the database:
-
-```powershell
-.\.wsvenv\Scripts\python.exe src/main.py --policy
-```
-
-Run policy grouping only for one ticker:
-
-```powershell
-.\.wsvenv\Scripts\python.exe src/main.py --policy --ticker AAPL
 ```
 
 Run the full data pipeline first, then update policy grouping:

@@ -147,7 +147,7 @@ class MainCliTest(unittest.TestCase):
 
         self.assertEqual(exc.exception.code, 2)
 
-    def test_email_holding_source_requires_holdings_or_metrics(self):
+    def test_email_holding_source_requires_holdings_mode(self):
         with patch("sys.stderr"), self.assertRaises(SystemExit) as exc:
             main_module.main(["--holding-source", "email"])
 
@@ -224,103 +224,11 @@ class MainCliTest(unittest.TestCase):
             export_path=None,
         )
 
-    def test_metrics_runs_metrics_only(self):
-        metrics = {
-            "type": "portfolio_metrics_summary",
-            "portfolio_value": 1000.0,
-            "export_path": "exports/portfolio_metrics_summary.json",
-        }
+    def test_metrics_flags_are_not_registered(self):
+        with patch("sys.stderr"), self.assertRaises(SystemExit) as exc:
+            main_module.main(["--metrics"])
 
-        with (
-            patch.object(main_module, "run_data_pipeline") as pipeline_mock,
-            patch.object(
-                main_module,
-                "run_portfolio_metrics",
-                return_value=metrics,
-            ) as metrics_mock,
-            patch.object(main_module, "format_metrics_output", return_value="metrics"),
-            patch.object(main_module, "close_connection"),
-            patch("builtins.print"),
-        ):
-            exit_code = main_module.main(["--metrics"])
-
-        self.assertEqual(exit_code, 0)
-        pipeline_mock.assert_not_called()
-        metrics_mock.assert_called_once_with(
-            ticker=None,
-            db_path=None,
-            export_path=None,
-            contribution_amount=0.0,
-            export=True,
-            holding_source="transactions",
-        )
-
-    def test_update_metrics_runs_pipeline_then_metrics(self):
-        metrics = {
-            "type": "position_metrics",
-            "ticker": "AAPL",
-            "export_path": "exports/portfolio_metrics_AAPL.json",
-        }
-
-        with (
-            patch.object(main_module, "run_data_pipeline") as pipeline_mock,
-            patch.object(
-                main_module,
-                "run_portfolio_metrics",
-                return_value=metrics,
-            ) as metrics_mock,
-            patch.object(main_module, "format_metrics_output", return_value="metrics"),
-            patch.object(main_module, "close_connection"),
-            patch("builtins.print"),
-        ):
-            exit_code = main_module.main(
-                ["--update-metrics", "--ticker", "AAPL", "--no-export"]
-            )
-
-        self.assertEqual(exit_code, 0)
-        pipeline_mock.assert_called_once_with(db_path=None)
-        metrics_mock.assert_called_once_with(
-            ticker="AAPL",
-            db_path=None,
-            export_path=None,
-            contribution_amount=0.0,
-            export=False,
-            holding_source="transactions",
-        )
-
-    def test_metrics_accepts_email_holding_source(self):
-        metrics = {
-            "type": "portfolio_metrics_summary",
-            "holding_source": "email",
-            "portfolio_value": 1000.0,
-            "export_path": "exports/portfolio_metrics_summary.json",
-        }
-
-        with (
-            patch.object(main_module, "run_data_pipeline") as pipeline_mock,
-            patch.object(
-                main_module,
-                "run_portfolio_metrics",
-                return_value=metrics,
-            ) as metrics_mock,
-            patch.object(main_module, "format_metrics_output", return_value="metrics"),
-            patch.object(main_module, "close_connection"),
-            patch("builtins.print"),
-        ):
-            exit_code = main_module.main(
-                ["--metrics", "--holding-source", "email"]
-            )
-
-        self.assertEqual(exit_code, 0)
-        pipeline_mock.assert_not_called()
-        metrics_mock.assert_called_once_with(
-            ticker=None,
-            db_path=None,
-            export_path=None,
-            contribution_amount=0.0,
-            export=True,
-            holding_source="email",
-        )
+        self.assertEqual(exc.exception.code, 2)
 
 
 if __name__ == "__main__":

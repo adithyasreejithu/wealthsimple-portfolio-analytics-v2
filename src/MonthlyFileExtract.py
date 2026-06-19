@@ -343,7 +343,3 @@ def camelot_extraction_pipeline(file: Path):
         len(final_df),
     )
     return final_df
-
-# if __name__ == "__main__":
-#     file = Path("C:\\Projects\\Python\\wealthsimple-portfolio-analytics-v2\\Data\\Data_Files\\2025-06.pdf")
-#     camelot_extraction_pipeline(file)

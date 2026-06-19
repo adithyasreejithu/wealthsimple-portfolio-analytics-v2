@@ -215,18 +215,3 @@ def extraction_pipline(file):
         return pd.DataFrame()
 
     return pd.concat(all_dfs, ignore_index=True)
-
-from multiprocessing import freeze_support
-
-if __name__ == "__main__":
-    # freeze_support()  
-
-    # file = Path("C:\\Projects\\Python\\wealthsimple-portfolio-analytics-v2\\Data\\Data_Files\\2026-01.pdf")
-    
-    # df = extraction_pipline(file)
-
-    # print(df.head(50))
-    files = check_data_files()
-    # print(type(file) for file in files)
-
-

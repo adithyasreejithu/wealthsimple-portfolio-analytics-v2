@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-import argparse
-import json
-import sys
 from typing import Any
 
-from Database_Schema import close_connection
 from portfolio_policy import normalize_ticker
-from portfolio_tools import get_current_holdings
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -64,65 +59,3 @@ def format_holdings_table(holdings: list[dict]) -> str:
     ]
     return "\n".join([header, divider, *body])
 
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Show current holdings from DuckDB.",
-    )
-    parser.add_argument(
-        "--db-path",
-        help="DuckDB path. Defaults to Database_Schema.DB_PATH.",
-    )
-    parser.add_argument(
-        "--ticker",
-        help="Only show one ticker, for example AAPL.",
-    )
-    parser.add_argument(
-        "--holding-source",
-        choices=["transactions", "email"],
-        default="transactions",
-        help="Holding source. Defaults to transactions.",
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Print holdings as JSON.",
-    )
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-
-    try:
-        holdings = get_current_holdings(
-            db_path=args.db_path,
-            source=args.holding_source,
-        )
-        if args.ticker:
-            holdings = _filter_holdings_by_ticker(holdings, args.ticker)
-            if not holdings:
-                print(
-                    f"{normalize_ticker(args.ticker)} was not found in current holdings",
-                    file=sys.stderr,
-                )
-                return 1
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    except Exception as exc:
-        print(f"Current holdings failed: {exc}", file=sys.stderr)
-        return 1
-    finally:
-        close_connection()
-
-    if args.json:
-        print(json.dumps(holdings, indent=2, default=str))
-    else:
-        print(format_holdings_table(holdings))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

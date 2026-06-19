@@ -1,7 +1,6 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,7 +11,23 @@ import run_current_holdings  # noqa: E402
 
 
 class RunCurrentHoldingsTest(unittest.TestCase):
-    def test_current_holdings_default_to_transactions_source(self):
+    def test_filter_holdings_by_ticker_is_case_insensitive(self):
+        holdings = [
+            {
+                "ticker": "AAPL",
+                "source": "transactions",
+            },
+            {
+                "ticker": "XEQT.TO",
+                "source": "transactions",
+            },
+        ]
+
+        filtered = run_current_holdings._filter_holdings_by_ticker(holdings, "xeqt")
+
+        self.assertEqual(filtered, [holdings[1]])
+
+    def test_format_holdings_table_includes_core_columns(self):
         holdings = [
             {
                 "ticker": "AAPL",
@@ -25,40 +40,12 @@ class RunCurrentHoldingsTest(unittest.TestCase):
             }
         ]
 
-        with (
-            patch.object(
-                run_current_holdings,
-                "get_current_holdings",
-                return_value=holdings,
-            ) as holdings_mock,
-            patch.object(run_current_holdings, "close_connection"),
-            patch("builtins.print"),
-        ):
-            exit_code = run_current_holdings.main([])
+        table = run_current_holdings.format_holdings_table(holdings)
 
-        self.assertEqual(exit_code, 0)
-        holdings_mock.assert_called_once_with(
-            db_path=None,
-            source="transactions",
-        )
-
-    def test_current_holdings_accept_email_source(self):
-        with (
-            patch.object(
-                run_current_holdings,
-                "get_current_holdings",
-                return_value=[],
-            ) as holdings_mock,
-            patch.object(run_current_holdings, "close_connection"),
-            patch("builtins.print"),
-        ):
-            exit_code = run_current_holdings.main(["--holding-source", "email"])
-
-        self.assertEqual(exit_code, 0)
-        holdings_mock.assert_called_once_with(
-            db_path=None,
-            source="email",
-        )
+        self.assertIn("Ticker", table)
+        self.assertIn("Market Value", table)
+        self.assertIn("AAPL", table)
+        self.assertIn("Quality", table)
 
 
 if __name__ == "__main__":

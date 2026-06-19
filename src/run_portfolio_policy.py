@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import argparse
-import sys
 from pathlib import Path
 
 from portfolio_policy import (
@@ -110,62 +108,3 @@ def format_grouping_table(active_grouping: dict) -> str:
 
     return "\n".join(lines)
 
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Generate portfolio policy grouping and save it to DuckDB.",
-    )
-    parser.add_argument(
-        "--ticker",
-        help="Only run policy grouping for one ticker, for example AAPL.",
-    )
-    parser.add_argument(
-        "--db-path",
-        help="DuckDB path. Defaults to Database_Schema.DB_PATH.",
-    )
-    parser.add_argument(
-        "--export-path",
-        help="JSON export path. Defaults to exports/active_policy.json or per-ticker JSON.",
-    )
-    parser.add_argument(
-        "--no-save-db",
-        action="store_true",
-        help="Export and print results without updating portfolio_grouping_active.",
-    )
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-
-    try:
-        active_grouping = run_policy_grouping(
-            ticker=args.ticker,
-            db_path=args.db_path,
-            export_path=args.export_path,
-            save_to_db=not args.no_save_db,
-        )
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    except Exception as exc:
-        print(f"Policy grouping failed: {exc}", file=sys.stderr)
-        return 1
-    finally:
-        from Database_Schema import close_connection
-
-        close_connection()
-
-    print(format_grouping_table(active_grouping))
-    print(f"\nJSON export: {active_grouping['export_path']}")
-    if active_grouping["saved_to_db"]:
-        print("Database table updated: portfolio_grouping_active")
-    else:
-        print("Database update skipped.")
-
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
