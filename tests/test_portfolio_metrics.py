@@ -91,6 +91,41 @@ class PortfolioMetricsTest(unittest.TestCase):
         self.assertLess(drawdown["max_drawdown"], 0)
         self.assertIn("sharpe_ratio", sharpe)
 
+    def test_risk_metrics_are_order_independent(self):
+        shuffled_history = [
+            self.history[2],
+            self.history[0],
+            self.history[3],
+            self.history[1],
+        ]
+
+        sorted_total_return = calculate_total_return(self.history)
+        sorted_volatility = calculate_volatility(self.history)
+        sorted_drawdown = calculate_max_drawdown(self.history)
+        sorted_sharpe = calculate_sharpe_ratio(self.history)
+
+        shuffled_total_return = calculate_total_return(shuffled_history)
+        shuffled_volatility = calculate_volatility(shuffled_history)
+        shuffled_drawdown = calculate_max_drawdown(shuffled_history)
+        shuffled_sharpe = calculate_sharpe_ratio(shuffled_history)
+
+        self.assertAlmostEqual(
+            shuffled_total_return["total_return"],
+            sorted_total_return["total_return"],
+        )
+        self.assertAlmostEqual(
+            shuffled_volatility["volatility"],
+            sorted_volatility["volatility"],
+        )
+        self.assertAlmostEqual(
+            shuffled_drawdown["max_drawdown"],
+            sorted_drawdown["max_drawdown"],
+        )
+        self.assertAlmostEqual(
+            shuffled_sharpe["sharpe_ratio"],
+            sorted_sharpe["sharpe_ratio"],
+        )
+
     def test_contribution_recommendations_can_be_generated(self):
         bucket_weights = {
             "Core": {"bucket": "Core", "market_value": 620.0, "weight": 0.62},

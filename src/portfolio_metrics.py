@@ -45,6 +45,27 @@ def _holdings_total(holdings: list[dict]) -> float:
     return sum(_safe_float(row.get("market_value")) for row in holdings)
 
 
+def _sorted_historical_values(historical_values: list[dict]) -> list[dict]:
+    """
+    Normalize historical values into chronological order before return math.
+
+    The metrics below assume each row represents the next day in sequence.
+    Sorting here keeps the formulas correct even if the caller passes rows in
+    a different order.
+    """
+    frame = pd.DataFrame(historical_values)
+    if frame.empty or "date" not in frame.columns:
+        return historical_values
+
+    frame = frame.copy()
+    frame["date"] = pd.to_datetime(frame["date"], errors="coerce")
+    frame = frame.dropna(subset=["date"])
+    if frame.empty:
+        return []
+
+    return frame.sort_values("date", kind="stable").to_dict(orient="records")
+
+
 def calculate_position_weight(
     ticker: str,
     holdings: list[dict] | None = None,
@@ -180,6 +201,7 @@ def calculate_total_return(
     historical_values = (
         historical_values if historical_values is not None else get_historical_values()
     )
+    historical_values = _sorted_historical_values(historical_values)
     clean_values = [
         row for row in historical_values if _safe_float(row.get("portfolio_value")) > 0
     ]
@@ -197,6 +219,7 @@ def calculate_total_return(
 
 
 def _daily_returns(historical_values: list[dict]) -> pd.Series:
+    historical_values = _sorted_historical_values(historical_values)
     values = pd.Series(
         [_safe_float(row.get("portfolio_value")) for row in historical_values],
         dtype="float64",
@@ -232,6 +255,7 @@ def calculate_max_drawdown(
     historical_values = (
         historical_values if historical_values is not None else get_historical_values()
     )
+    historical_values = _sorted_historical_values(historical_values)
     values = pd.Series(
         [_safe_float(row.get("portfolio_value")) for row in historical_values],
         dtype="float64",
@@ -456,7 +480,12 @@ def generate_portfolio_metrics_summary(
         historical_values if historical_values is not None else get_historical_values()
     )
     portfolio_value = _holdings_total(holdings) + cash_value
+    # Position weights are holdings-only; cash is tracked separately at the
+    # portfolio summary level so the selected tickers still sum to the invested
+    # capital.
     position_weights = calculate_position_weights(holdings)
+    # Bucket weights include cash when available because the policy targets are
+    # expressed against the full portfolio, not only the invested portion.
     bucket_weights = calculate_bucket_weights(holdings, cash_value=cash_value)
     allocation_drift = calculate_allocation_drift(bucket_weights)
     warnings = check_position_limits(position_weights) + check_bucket_limits(bucket_weights)
@@ -477,6 +506,8 @@ def generate_portfolio_metrics_summary(
             "sharpe_ratio": calculate_sharpe_ratio(historical_values),
         },
         "warnings": warnings,
+        # New contributions are pushed toward underweight buckets first, then
+        # fall back to the policy mix if nothing is underweight.
         "recommended_contribution_allocation": recommend_contribution_allocation(
             contribution_amount,
             bucket_weights,
