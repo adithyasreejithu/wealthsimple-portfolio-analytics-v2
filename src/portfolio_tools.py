@@ -8,6 +8,18 @@ financial analytics so policy grouping and metrics logic stay separate.
 
 `src/main.py` is the only CLI entrypoint. This module is library code and should
 stay safe to import from tests, notebooks, and future workflows.
+
+Available tools:
+- get_current_holdings: return open positions with prices, market value, cost
+  basis, unrealized gain, and policy grouping.
+- get_cash_available: return the latest available cash balance.
+- get_portfolio_value: return total account value from holdings plus optional
+  cash.
+- get_allocation_by_ticker: return current portfolio weights by ticker.
+- get_allocation_by_bucket: return current portfolio weights by policy bucket.
+- get_position_summary: return one ticker's current holding summary.
+- get_historical_values: reconstruct daily invested portfolio values from
+  stored transactions and price history.
 """
 
 from __future__ import annotations
